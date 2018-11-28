@@ -13,6 +13,12 @@ def listdironly(path):
     return [d for d in os.listdir(path) if os.path.isdir(path+d) == True]
 
 
+def joinpath(path,*paths):
+    
+    ## force the paths to have forward slash (unix-style)
+    return os.path.join(path,*paths).replace('\\','/')
+
+
 if __name__ == '__main__':
 
     
@@ -26,20 +32,21 @@ if __name__ == '__main__':
     
     ## set up logging
     if args.logfile:
-        logging.basicConfig(filename=args.logfile,filemode='w',format='%(levelname)s:%(message)s', level=logging.DEBUG)    
+        logging.basicConfig(filename=args.logfile,filemode='w',
+                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
         console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logging.getLogger('').addHandler(console)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
-    time0 = time.time()
-    
-    writer = pd.ExcelWriter(args.path + args.xlfile)
+        logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
 
     qs = listdironly(args.path)
     
+    writer = pd.ExcelWriter(joinpath(args.path,args.xlfile))
+
+    time0 = time.time()    
+
     ## set up dataframe for neutral defect first
     if 'charge_0' not in qs:
         logging.warning("can't find output files for neutral defect")
@@ -50,22 +57,33 @@ if __name__ == '__main__':
                                       '1/N',
                                       'E_def',
                                       'E_bulk'])
-        for cell in listdironly(args.path+'charge_0/'):
-            for vac in listdironly(args.path+'charge_0/'+cell+'/'):   
+    
+        for cell in listdironly(joinpath(args.path,'charge_0','')):
+            for vac in listdironly(joinpath(args.path,'charge_0',cell,'')):   
                 logging.info("parsing neutral %s %s"%(cell,vac))
-                dir0 = args.path+'charge_0/'+cell+'/'+vac+'/'
-                if not os.path.exists(dir0 + "vasprun.xml"):
-                    logging.warning("vasprun.xml file does not exist in %s"%dir0)
-                elif not os.path.exists(dir0 + "bulkref/vasprun.xml"):
-                    logging.warning("vasprun.xml file does not exist in %s"%(dir0+"bulkref/"))
+                
+                folder = joinpath(args.path,'charge_0',cell,vac,'')
+                vr_file = joinpath(folder,'vasprun.xml')
+                vr_ref_file = joinpath(folder,'bulkref','vasprun.xml')
+                
+                if not os.path.exists(vr_file):
+                    logging.warning("%s file does not exist"%vr_file)
+                    
+                elif not os.path.exists(vr_ref_file):
+                    logging.warning("%s file does not exist"%vr_ref_file)
+                    
                 else:
-                    vr = Vasprun(dir0 + "vasprun.xml")
+                    natoms = np.sum(Poscar.from_file(joinpath(folder,'bulkref','POSCAR')).natoms)
+                    vr = Vasprun(vr_file)
+                    vr_ref = Vasprun(vr_ref_file)
+                    
                     if not vr.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"%dir0)
-                    vr_ref = Vasprun(dir0 + "bulkref/vasprun.xml")
-                    if not vr.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"%(dir0+"bulkref/"))
-                    natoms = np.sum(Poscar.from_file(dir0 + "bulkref/POSCAR").natoms)
+                        logging.warning("Vasp calculation in %s may not be converged"
+                                        %folder)                    
+                    if not vr_ref.converged:
+                        logging.warning("Vasp calculation in %s may not be converged"
+                                        %(joinpath(folder,'bulkref','')))
+                    
                     df0.loc[len(df0)] = [vac,
                                          cell,
                                          natoms,
@@ -73,31 +91,40 @@ if __name__ == '__main__':
                                          vr.final_energy,
                                          vr_ref.final_energy]
                     ## add the parsing of chem pot, vbm
+                    
         df0.sort_values(['vacuum','N'],inplace=True)
         df0.to_excel(writer,'charge_0')
     
 
     ## modify dataframe for charged defects
     for q in [qi for qi in qs if qi != 'charge_0']:
-#        qval = int(q.split('_')[-1])
         df = df0.copy(deep=True)
-        for cell in listdironly(args.path+q+'/'):
-            for vac in listdironly(args.path+q+'/'+cell+'/'):
+#        qval = int(q.split('_')[-1])
+        
+        for cell in listdironly(joinpath(args.path,q,'')):
+            for vac in listdironly(joinpath(args.path,q,cell,'')):
                 logging.info("parsing %s %s %s"%(q,cell,vac))
-                dir1 = args.path+q+'/'+cell+'/'+vac+'/'
-                if not os.path.exists(dir1 + "vasprun.xml"):
-                    logging.warning("vasprun.xml file does not exist in %s"%dir1)
+                
+                folder = joinpath(args.path,q,cell,vac,'')
+                vr_file = joinpath(folder,'vasprun.xml')
+                
+                if not os.path.exists(vr_file):
+                    logging.warning("%s file does not exist"%vr_file)
+                    
                 else:
-                    vr = Vasprun(dir1 + "vasprun.xml")
+                    vr = Vasprun(vr_file)                    
                     if not vr.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"%dir1)
-                    df.loc[(df['vacuum'] == vac) & (df['supercell'] == cell),'E_def'] = vr.final_energy
+                        logging.warning("Vasp calculation in %s may not be converged"
+                                        %folder)                       
+                    df.loc[(df['vacuum'] == vac) & 
+                           (df['supercell'] == cell),'E_def'] = vr.final_energy
+        
         df.to_excel(writer, q)
 
     writer.save()
     
     logging.debug("Total time taken (s): %.2f"%(time.time()-time0))
-               
+#               
 #    df_1 = df_1.assign(new_col=df_1["E_def"] - df_1["E_bulk"])                
     
     
