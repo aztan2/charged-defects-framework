@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Estimate alignment correction.')
     parser.add_argument('vref',help='path to bulk LOCPOT file')
     parser.add_argument('vdef',help='path to defect LOCPOT file')
+    parser.add_argument('encut',help='cutoff energy (eV)')
     parser.add_argument('q',type=int,help='charge (conventional units)')
     parser.add_argument('--vfile',help='vline .dat file',default='vline-eV.dat')
     parser.add_argument('--noplot',help='do not generate plots',default=False,action='store_true')
@@ -23,17 +24,18 @@ if __name__ == '__main__':
     
     ## set up logging
     if args.logfile:
-        logging.basicConfig(filename=args.logfile,filemode='w',format='%(levelname)s:%(message)s', level=logging.DEBUG)    
+        logging.basicConfig(filename=args.logfile,filemode='w',
+                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
         console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
         logging.getLogger('').addHandler(console)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
     
     ## basic command to run sxdefectalign2d
     command = ['~/sxdefectalign2d', '--vasp',
-               '--ecut', str(520/13.6057), ## convert eV to Ry
+               '--ecut', str(args.encut/13.6057), ## convert eV to Ry
                '--vref', args.vref,
                '--vdef', args.vdef]
     
