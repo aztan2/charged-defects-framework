@@ -13,7 +13,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Estimate alignment correction.')
     parser.add_argument('vref',help='path to bulk LOCPOT file')
     parser.add_argument('vdef',help='path to defect LOCPOT file')
-    parser.add_argument('encut',help='cutoff energy (eV)')
+    parser.add_argument('encut',type=int,help='cutoff energy (eV)')
     parser.add_argument('q',type=int,help='charge (conventional units)')
     parser.add_argument('--vfile',help='vline .dat file',default='vline-eV.dat')
     parser.add_argument('--noplot',help='do not generate plots',default=False,action='store_true')
@@ -80,7 +80,7 @@ if __name__ == '__main__':
             else: 
                 shift -= 0.01
             logging.info("try shift = %.8f"%shift)
-        elif m1*np.sign(args.q) > 0:
+        elif (m1+m2)*np.sign(args.q) > 0:
             smin = shift
             if smax == np.inf:
                 shift += 1.0
@@ -89,7 +89,7 @@ if __name__ == '__main__':
             shifting = 'right'
             logging.debug("optimal shift is in [%.8f, %.8f]"%(smin,smax))
             logging.info("shift charge in +z direction; try shift = %.8f"%shift)
-        elif m1*np.sign(args.q) < 0:
+        elif (m1+m2)*np.sign(args.q) < 0:
             smax = shift
             if smin == -np.inf:
                 shift -= 1.0
