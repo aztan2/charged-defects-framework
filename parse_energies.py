@@ -24,6 +24,7 @@ if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Parse total energies from OUTCARs.')
     parser.add_argument('path',help='path to the directory containing all the output files')
+    parser.add_argument('path_ref',help='path to the directory containing all the reference output files')
     parser.add_argument('xlfile',help='excel filename to save the dataframe to')
     parser.add_argument('--logfile',help='logfile to save output to')
        
@@ -63,8 +64,10 @@ if __name__ == '__main__':
                 logging.info("parsing neutral %s %s"%(cell,vac))
                 
                 folder = joinpath(args.path,'charge_0',cell,vac,'')
+                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
                 vr_file = joinpath(folder,'vasprun.xml')
-                vr_ref_file = joinpath(folder,'bulkref','vasprun.xml')
+#                vr_file = joinpath(folder,'ismear1','vasprun.xml')
+                vr_ref_file = joinpath(folder_ref,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
                     logging.warning("%s file does not exist"%vr_file)
@@ -73,7 +76,7 @@ if __name__ == '__main__':
                     logging.warning("%s file does not exist"%vr_ref_file)
                     
                 else:
-                    natoms = np.sum(Poscar.from_file(joinpath(folder,'bulkref','POSCAR')).natoms)
+                    natoms = np.sum(Poscar.from_file(joinpath(folder_ref,'POSCAR')).natoms)
                     vr = Vasprun(vr_file)
                     vr_ref = Vasprun(vr_ref_file)
                     
@@ -99,7 +102,6 @@ if __name__ == '__main__':
     ## modify dataframe for charged defects
     for q in [qi for qi in qs if qi != 'charge_0']:
         df = df0.copy(deep=True)
-#        qval = int(q.split('_')[-1])
         
         for cell in listdironly(joinpath(args.path,q,'')):
             for vac in listdironly(joinpath(args.path,q,cell,'')):
@@ -107,6 +109,7 @@ if __name__ == '__main__':
                 
                 folder = joinpath(args.path,q,cell,vac,'')
                 vr_file = joinpath(folder,'vasprun.xml')
+#                vr_file = joinpath(folder,'ismear1','vasprun.xml')
                 
                 if not os.path.exists(vr_file):
                     logging.warning("%s file does not exist"%vr_file)
@@ -124,7 +127,4 @@ if __name__ == '__main__':
     writer.save()
     
     logging.debug("Total time taken (s): %.2f"%(time.time()-time0))
-#               
-#    df_1 = df_1.assign(new_col=df_1["E_def"] - df_1["E_bulk"])                
-    
-    
+            
