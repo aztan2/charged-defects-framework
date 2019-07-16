@@ -1,6 +1,10 @@
 import os
 import argparse
 import numpy as np
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import pymatgen
 from pymatgen.io.vasp.inputs import Poscar,Potcar,Incar
 
 
@@ -132,7 +136,7 @@ class IncarSettings:
         return
     
     
-    def mag(self,ispin=2):
+    def mag(self,ispin=2,ncl=False):
 
         if ispin == 2:
             high_magmom, low_magmom = 0,0
@@ -142,10 +146,36 @@ class IncarSettings:
                 else:
                     low_magmom += atomnum
                     
-            params = {"ISPIN": ispin,  ## default is spin-polarized
-                      "MAGMOM": "%d*5.0 %d*0.6"%(high_magmom,low_magmom)
-                      }
+            if ncl:  ## define xyz magmom for each atom    
+                params = {"ISPIN": ispin,  ## default is spin-polarized
+                          "MAGMOM": "%d*3.0 %d*0.35"%(3*high_magmom,3*low_magmom)
+                          }
+            else:        
+                params = {"ISPIN": ispin,  ## default is spin-polarized
+                          "MAGMOM": "%d*5.0 %d*0.6"%(high_magmom,low_magmom)
+                          }
         
+        self.params.update(params)
+        
+        return
+
+
+    def soc(self,icharg=None,saxis=[1,1,1]):
+        
+        if self.chgcar:
+            icharg = 1  ## Read charge density from CHGCAR (don't keep fixed)
+            saxis = [0,0,1]
+
+        params = {"ICHARG": icharg,
+                  "LSORBIT": True,  ## turn on spin-orbit coupling
+                  "LNONCOLLINEAR": True,  ## turn on noncollinear calculation
+                  "SAXIS": "%d %d %d"%(saxis[0],saxis[1],saxis[2]),  ## specify reference axis
+                  "GGA_COMPAT": False   ## do not restore full lattice symmetry
+                  }
+        
+        if self.chgcar:
+            params.update({"MAGMOM": None})  ## reads initial magmom from CHGCAR
+
         self.params.update(params)
         
         return
@@ -194,6 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('q',type=int,help='charge')
     parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands',default='relax')
     parser.add_argument('--functional',help='type of function: PBE(default)/SCAN+rVV10',default='PBE')
+    parser.add_argument('--soc',help='turn on spin-orbit coupling',default=False,action='store_true')
       
     ## read in the above arguments from command line
     args = parser.parse_args()
@@ -202,16 +233,19 @@ if __name__ == '__main__':
     ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
                 
-    if args.runtype == "dos":
-        dir_sub = dir_sub+"dos/"
+#    if args.runtype == "dos":
+#        dir_sub = dir_sub+"dos/"
     
     poscar = Poscar.from_file(os.path.join(dir_sub,"POSCAR"))
     potcar = Potcar.from_file(os.path.join(dir_sub,"POTCAR"))
     wavecar = os.path.exists(os.path.join(dir_sub,"WAVECAR"))  ## just a boolean (does file exist)
     chgcar = os.path.exists(os.path.join(dir_sub,"CHGCAR"))  ## just a boolean (does file exist)
 
-    inc = IncarSettings(args.functional,args.runtype,args.q,poscar,potcar,wavecar,chgcar)
+    inc = IncarSettings(args.functional.split("+"),args.runtype,args.q,poscar,potcar,wavecar,chgcar)
     inc.setparams()
+    if args.soc:
+        inc.mag(ncl=True)
+        inc.soc()
     inc.stripNone()       
     
     with open(os.path.join(dir_sub,"INCAR"),'w') as f:

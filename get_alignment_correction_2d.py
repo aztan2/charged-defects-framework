@@ -39,7 +39,7 @@ if __name__ == '__main__':
                '--vref', args.vref,
                '--vdef', args.vdef]
     
-    ## initialize the range of shift values backeting the optimal shift
+    ## initialize the range of shift values bracketing the optimal shift
     smin, smax = -np.inf, np.inf
     shift = 0.0
     shifting = 'right'

@@ -64,9 +64,10 @@ if __name__ == '__main__':
                 logging.info("parsing neutral %s %s"%(cell,vac))
                 
                 folder = joinpath(args.path,'charge_0',cell,vac,'')
+#                folder = joinpath(args.path,'charge_0',cell,vac,'dos','')
                 folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+#                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','dos','')
                 vr_file = joinpath(folder,'vasprun.xml')
-#                vr_file = joinpath(folder,'ismear1','vasprun.xml')
                 vr_ref_file = joinpath(folder_ref,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
@@ -108,8 +109,8 @@ if __name__ == '__main__':
                 logging.info("parsing %s %s %s"%(q,cell,vac))
                 
                 folder = joinpath(args.path,q,cell,vac,'')
+#                folder = joinpath(args.path,q,cell,vac,'dos','')
                 vr_file = joinpath(folder,'vasprun.xml')
-#                vr_file = joinpath(folder,'ismear1','vasprun.xml')
                 
                 if not os.path.exists(vr_file):
                     logging.warning("%s file does not exist"%vr_file)
@@ -128,3 +129,5 @@ if __name__ == '__main__':
     
     logging.debug("Total time taken (s): %.2f"%(time.time()-time0))
             
+    
+    

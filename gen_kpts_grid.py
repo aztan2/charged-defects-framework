@@ -1,6 +1,10 @@
 import os
 import math
 import argparse
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import pymatgen
 from pymatgen.io.vasp.inputs import Poscar,Kpoints
 
 

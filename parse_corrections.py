@@ -44,22 +44,40 @@ if __name__ == '__main__':
        
     for q in [qi for qi in df.keys() if qi != 'charge_0']:
         df[q]['E_corr'] = np.nan
-    
 
-    for cell in listdironly(joinpath(args.path,'')):
-        for vac in listdironly(joinpath(args.path,cell,'')): 
-            for q in listdironly(joinpath(args.path,cell,vac,'')): 
-                logging.info("parsing %s %s %s"%(cell,vac,q))
-                if not os.path.exists(joinpath(args.path,cell,vac,q,'correction')):
+
+    for q in listdironly(joinpath(args.path,'')):
+        for cell in listdironly(joinpath(args.path,q,'')): 
+            for vac in listdironly(joinpath(args.path,q,cell,'')): 
+                logging.info("parsing %s %s %s"%(q,cell,vac))
+                if not os.path.exists(joinpath(args.path,q,cell,vac,'correction','correction')):
+#                if not os.path.exists(joinpath(args.path,q,cell,vac,'dos','correction','correction')):
                     logging.warning("correction file does not exist")
                 else:
-                    with open(joinpath(args.path,cell,vac,q,'correction')) as f:
+                    with open(joinpath(args.path,q,cell,vac,'correction','correction')) as f:
+#                    with open(joinpath(args.path,q,cell,vac,'dos','correction','correction')) as f:
                         lines = f.readlines()
                         for line in lines:
                             if line[:21] == 'iso - periodic energy':
                                 E_corr = float(line.split()[-2])
                     df[q].loc[(df[q]['vacuum'] == vac) & 
                               (df[q]['supercell'] == cell),'E_corr'] = E_corr
+    
+
+#    for cell in listdironly(joinpath(args.path,'')):
+#        for vac in listdironly(joinpath(args.path,cell,'')): 
+#            for q in listdironly(joinpath(args.path,cell,vac,'')): 
+#                logging.info("parsing %s %s %s"%(cell,vac,q))
+#                if not os.path.exists(joinpath(args.path,cell,vac,q,'correction')):
+#                    logging.warning("correction file does not exist")
+#                else:
+#                    with open(joinpath(args.path,cell,vac,q,'correction')) as f:
+#                        lines = f.readlines()
+#                        for line in lines:
+#                            if line[:21] == 'iso - periodic energy':
+#                                E_corr = float(line.split()[-2])
+#                    df[q].loc[(df[q]['vacuum'] == vac) & 
+#                              (df[q]['supercell'] == cell),'E_corr'] = E_corr
 
 
     ## write the updated excel file

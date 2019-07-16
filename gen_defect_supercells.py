@@ -2,6 +2,10 @@ import os
 import json
 import argparse
 import numpy as np
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import pymatgen
 from pymatgen.io.vasp.inputs import Poscar
 
 
@@ -38,13 +42,14 @@ class Defect():
         return
 
 
-    def replace_atom(self,new_species):
+    def replace_atom(self):
      
         for def_type,def_site in zip(self.defect_type,self.defect_site):
+            print (def_type,def_site)
             if def_type[0] == "s":
                 if def_site in self.structure:
                     defect_index = self.structure.index(def_site)
-                    self.structure[defect_index] = new_species
+                    self.structure[defect_index] = def_type.split("_")[-1]
                 else:
                     raise ValueError ("site does not exist to create a substitutional")
         
@@ -72,6 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('q',type=int,help='charge')
     parser.add_argument('supercell',help='supercell size')
     parser.add_argument('vacuum',type=int,help='vacuum spacing')
+    parser.add_argument('--write_bulkref',help='to write bulkref?',default=False,action='store_true')
       
     ## read in the above arguments from command line
     args = parser.parse_args()
@@ -81,7 +87,8 @@ if __name__ == '__main__':
     dir_sub = os.getcwd()
     
     ## read in corresponding unit cell POSCAR
-    poscar = Poscar.from_file(os.path.join(args.dir_poscars,"POSCAR_vac_%d"%args.vacuum))       
+    poscar = Poscar.from_file(os.path.join(args.dir_poscars,"POSCAR_vac_%d"%args.vacuum),
+                              check_for_POTCAR=False, read_velocities=False)       
     
     ## make undefected supercell
     structure = poscar.structure.copy()
@@ -94,21 +101,32 @@ if __name__ == '__main__':
         
     ## create vacancy defect
     ## THIS PART IS STILL HARDCODED !!
-    defect_site = structure_bulk[structure_bulk.num_sites-1]
-    defect.add_defect_info(defect_type="vac_Se",defect_site=defect_site)
+#    defect_site = structure_bulk[structure_bulk.num_sites-1]
+#    defect.add_defect_info(defect_type="vac_S",defect_site=defect_site)
+    defect_site = structure_bulk[int(structure_bulk.num_sites/3-1)]
+    defect.add_defect_info(defect_type="vac_W",defect_site=defect_site)
+    ## create second vacancy defect (divacancy)
+#    defect_site = structure_bulk[int(2*structure_bulk.num_sites/3-1)]
+#    defect_site = structure_bulk[structure_bulk.num_sites-2]
+#    defect.add_defect_info(defect_type="vac_Se",defect_site=defect_site)
     defect.remove_atom()
         
     ## create substitutional defect
-#                defect_site = structure_bulk[int(structure_bulk.num_sites/3-1)]
-#                defect.add_defect_info(defect_type="sub_Nb",defect_site=defect_site)
-#                defect.replace_atom(new_species="Nb")
+#    defect_site = structure_bulk[int(structure_bulk.num_sites/3-1)]
+#    defect.add_defect_info(defect_type="sub_Nb",defect_site=defect_site)
+#    defect_site = structure_bulk[int(structure_bulk.num_sites-1)]
+#    defect.add_defect_info(defect_type="sub_O",defect_site=defect_site)
+#    defect.replace_atom()
 
     ## write POSCAR
     Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),os.path.join(dir_sub,"POSCAR"))
-    if args.q == 0:
-        if not os.path.exists(os.path.join(dir_sub,"bulkref")):
-            os.makedirs(os.path.join(dir_sub,"bulkref"))
-        Poscar.write_file(Poscar(structure_bulk),os.path.join(dir_sub,"bulkref","POSCAR"))
+    
+    ## write bulkref POSCAR
+    if args.write_bulkref:
+        if args.q == 0:
+            if not os.path.exists(os.path.join(dir_sub,"bulkref")):
+                os.makedirs(os.path.join(dir_sub,"bulkref"))
+            Poscar.write_file(Poscar(structure_bulk),os.path.join(dir_sub,"bulkref","POSCAR"))
       
     ## write json file
     with open(os.path.join(dir_sub,"defectproperty.json"), 'w') as file:
