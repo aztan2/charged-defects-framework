@@ -22,6 +22,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parse correction calculated by sxdefectalign2d.')
     parser.add_argument('path',help='path to the directory containing the correction files')
     parser.add_argument('xlfile',help='excel filename to read/save the dataframe to')
+    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory')
     parser.add_argument('--logfile',help='logfile to save output to')
        
     ## read in the above arguments from command line
@@ -50,12 +51,14 @@ if __name__ == '__main__':
         for cell in listdironly(joinpath(args.path,q,'')): 
             for vac in listdironly(joinpath(args.path,q,cell,'')): 
                 logging.info("parsing %s %s %s"%(q,cell,vac))
-                if not os.path.exists(joinpath(args.path,q,cell,vac,'correction','correction')):
-#                if not os.path.exists(joinpath(args.path,q,cell,vac,'dos','correction','correction')):
+                if args.soc:  
+                    mypath = joinpath(args.path,q,cell,vac,'dos','correction','correction')
+                else:  
+                    mypath = joinpath(args.path,q,cell,vac,'correction','correction')
+                if not os.path.exists(mypath):
                     logging.warning("correction file does not exist")
                 else:
-                    with open(joinpath(args.path,q,cell,vac,'correction','correction')) as f:
-#                    with open(joinpath(args.path,q,cell,vac,'dos','correction','correction')) as f:
+                    with open(mypath) as f:
                         lines = f.readlines()
                         for line in lines:
                             if line[:21] == 'iso - periodic energy':

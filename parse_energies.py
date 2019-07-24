@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('path',help='path to the directory containing all the output files')
     parser.add_argument('path_ref',help='path to the directory containing all the reference output files')
     parser.add_argument('xlfile',help='excel filename to save the dataframe to')
+    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory')
     parser.add_argument('--logfile',help='logfile to save output to')
        
     ## read in the above arguments from command line
@@ -62,11 +63,14 @@ if __name__ == '__main__':
         for cell in listdironly(joinpath(args.path,'charge_0','')):
             for vac in listdironly(joinpath(args.path,'charge_0',cell,'')):   
                 logging.info("parsing neutral %s %s"%(cell,vac))
-                
-                folder = joinpath(args.path,'charge_0',cell,vac,'')
-#                folder = joinpath(args.path,'charge_0',cell,vac,'dos','')
-                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
-#                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','dos','')
+
+                if args.soc:  
+                    folder = joinpath(args.path,'charge_0',cell,vac,'dos','')
+                    folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','dos','')
+                else:
+                    folder = joinpath(args.path,'charge_0',cell,vac,'')
+                    folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+                    
                 vr_file = joinpath(folder,'vasprun.xml')
                 vr_ref_file = joinpath(folder_ref,'vasprun.xml')
                 
@@ -107,9 +111,12 @@ if __name__ == '__main__':
         for cell in listdironly(joinpath(args.path,q,'')):
             for vac in listdironly(joinpath(args.path,q,cell,'')):
                 logging.info("parsing %s %s %s"%(q,cell,vac))
-                
-                folder = joinpath(args.path,q,cell,vac,'')
-#                folder = joinpath(args.path,q,cell,vac,'dos','')
+
+                if args.soc:
+                    folder = joinpath(args.path,q,cell,vac,'dos','')
+                else:
+                    folder = joinpath(args.path,q,cell,vac,'')
+                    
                 vr_file = joinpath(folder,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
