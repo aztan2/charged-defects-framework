@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parse correction calculated by sxdefectalign2d.')
     parser.add_argument('path',help='path to the directory containing the correction files')
     parser.add_argument('xlfile',help='excel filename to read/save the dataframe to')
-    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory')
+    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory',default=False,action='store_true')
     parser.add_argument('--logfile',help='logfile to save output to')
        
     ## read in the above arguments from command line
