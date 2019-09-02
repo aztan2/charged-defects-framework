@@ -8,6 +8,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import pymatgen
 from pymatgen.io.vasp.inputs import Poscar
+from pymatgen.core.sites import Site,PeriodicSite
 
 
 class Defect():
@@ -20,9 +21,17 @@ class Defect():
         self.charge = charge
         self.defect_type = []
         self.defect_site = []
-            
 
-    def get_defect_site(self, initdef):
+
+    def add_defect_info(self, defect_type, defect_site):
+        
+        self.defect_type.append(defect_type)
+        self.defect_site.append(defect_site)
+            
+        return
+    
+            
+    def get_site_ind(self, siteind, sitesp):
 
         ## figuring out min and max+1 indices for each species        
         syms = [site.specie.symbol for site in self.structure]
@@ -30,24 +39,41 @@ class Defect():
         elem_max = np.cumsum([len(tuple(el[1])) for el in itertools.groupby(syms)])
         elem_min = [0] + [i for i in elem_max[:-1]]
         elem_minmax = {el: [imin,imax] for el,imin,imax in zip(elems,elem_min,elem_max)}
+
+        ## initdef["index"] is a relative site index
+        ## if possible, figure out a less clunky way to index...
+        if siteind < 0:
+            siteind_new = int(elem_minmax[sitesp][1]+siteind)
+        else:
+            siteind_new = int(elem_minmax[sitesp][0]+siteind)   
         
-        if initdef["type"][0] == "v" or initdef["type"][0] == "s":
-            ## initdef["index"] is a relative site index
-            ## if possible, figure out a less clunky way to index...
-            if initdef["index"] < 0:
-                defect_site = structure_bulk[int(elem_minmax[initdef["species"]][1]+initdef["index"])]
-            else:
-                defect_site = structure_bulk[int(elem_minmax[initdef["species"]][0]+initdef["index"])]
+        return siteind_new
+    
+
+    def get_defect_site(self, initdef):
+        
+        if initdef["type"][0] == "v" or initdef["type"][0] == "s":            
+            defect_site = structure_bulk[self.get_site_ind(initdef["index"],initdef["species"])]
+            
+        if initdef["type"][0] == "i" or initdef["type"][0] == "a":
+            if len(initdef["index"]) != len(initdef["species"]):
+                raise ValueError ("inconsistency between index and species lists")
+            ## the defect site coords are defined by the center (average)
+            ## of the user-provided list of sites
+            defect_coords = np.array([0.,0.,0.])
+            for siteind,sitesp in zip(initdef["index"],initdef["species"]):
+                siteind_new = self.get_site_ind(siteind,sitesp)
+                defect_coords += np.array(structure_bulk[siteind_new].frac_coords)
+            defect_coords = defect_coords/len(initdef["index"])
+            if initdef["shift_z"]:
+                ## we may want to shift the z position, e.g. in the case of an adatom
+                defect_coords[2] += float(initdef["shift_z"])/self.structure.lattice.c
+            ## create the defect_site as a PeriodicSite object
+            defect_site = PeriodicSite(initdef["species_new"],defect_coords,
+                                       lattice=self.structure.lattice,
+                                       coords_are_cartesian=False)
             
         return defect_site
-    
-        
-    def add_defect_info(self, defect_type, defect_site):
-        
-        self.defect_type.append(defect_type)
-        self.defect_site.append(defect_site)
-            
-        return
     
 
     def remove_atom(self):
@@ -73,6 +99,18 @@ class Defect():
                 else:
                     raise ValueError ("site does not exist to create a substitutional")
         
+        return
+    
+    
+    def add_atom(self):
+     
+        for def_type,def_site in zip(self.defect_type,self.defect_site):
+            if def_type[0] == "i" or def_type[0] == "a":
+                if def_site.frac_coords.tolist() in self.structure.frac_coords.tolist():
+                    raise ValueError ("site already exists; can't add an atom here")
+                else:
+                    self.structure.append(defect_site.specie,def_site.frac_coords)
+                
         return
     
     
@@ -119,7 +157,7 @@ if __name__ == '__main__':
     structure_bulk = structure.copy()
     
     
-    ## read in defect details from initdefect json file
+    # read in defect details from initdefect json file
     with open(args.json_initdef, 'r') as file:
         initdef = json.loads(file.read())
 
@@ -129,6 +167,7 @@ if __name__ == '__main__':
     ## set the defect info (type, site, species) for each defect listed in the json file
     for d in initdef:
         defect_site = defect.get_defect_site(initdef[d])
+#        defect_site = structure_bulk[int(2*structure_bulk.num_sites/3-1)]
         if initdef[d]["type"][0] == "v": 
             ## vacancy type defect
             defect.add_defect_info(defect_type=initdef[d]["type"]+"_"+initdef[d]["species"],
@@ -137,13 +176,17 @@ if __name__ == '__main__':
             ## substitutional type defect
             defect.add_defect_info(defect_type=initdef[d]["type"]+"_"+initdef[d]["species_new"],
                                    defect_site=defect_site)            
-#        defect_site = structure_bulk[int(2*structure_bulk.num_sites/3-1)]
+        if initdef[d]["type"][0] == "i" or initdef[d]["type"][0] == "a": 
+            ## interstitial/adatom type defect
+            defect.add_defect_info(defect_type=initdef[d]["type"]+"_"+initdef[d]["species_new"],
+                                   defect_site=defect_site)  
 
     ## create vacancy defect(s)           
     defect.remove_atom()
     ## create substitutional defect(s)
     defect.replace_atom()
-        
+    ## create interstitial defect(s)
+    defect.add_atom()     
 
     ## write POSCAR
     Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),os.path.join(dir_sub,"POSCAR"))
