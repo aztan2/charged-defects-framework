@@ -64,13 +64,17 @@ if __name__ == '__main__':
             for vac in listdironly(joinpath(args.path,'charge_0',cell,'')):   
                 logging.info("parsing neutral %s %s"%(cell,vac))
 
+                folder = joinpath(args.path,'charge_0',cell,vac,'')
+                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+
                 if args.soc:  
                     folder = joinpath(args.path,'charge_0',cell,vac,'dos','')
                     folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','dos','')
-                else:
-                    folder = joinpath(args.path,'charge_0',cell,vac,'')
-                    folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
-                    
+                    logging.info("parsing dos subdirectory")
+                if 'restart' in listdironly(joinpath(args.path,'charge_0',cell,vac,'')):
+                    folder = joinpath(args.path,'charge_0',cell,vac,'restart','')
+                    logging.info("parsing restart subdirectory")
+                                        
                 vr_file = joinpath(folder,'vasprun.xml')
                 vr_ref_file = joinpath(folder_ref,'vasprun.xml')
                 
