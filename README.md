@@ -6,7 +6,7 @@ This repository contains a collection of python and bash scripts for setting up 
 
 This is currently a work in progress by Anne Marie Tan. 
 
-### Python scripts: 
+## Python scripts: 
 
 Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas`, `matplotlib`, `argparse` which need to be installed beforehand.
 
@@ -23,11 +23,32 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 * `parse_corrections.py`: parses the correction energies computed by sxdefectalign2d, adds to the pandas dataframe, and writes out to an excel file.
 
 
-### Bash scripts: 
+## Bash scripts: 
 
 * `setup_defects.sh`: creates new sub-directories in the charge/supercell/vacuum pattern for a given defect, and runs `gen_defect_supercells.py`, `gen_incar.py`, `gen_kpts_grid.py`, and `gen_submit.py` to generate all the required input files for a VASP calculation. This script assumes that the parent directory from which this is run contains the appropriate unitcell `POSCAR` and `POTCAR` files.
 * `apply_correction_loop.sh`: runs `gen_SPHInX_input_file.py` followed by `get_alignment_correction_2d.py` in all relevant sub-directories (ignoring neutral defects)
 * `restart_SCAN.sh`: creates new sub-directories in the charge/supercell/vacuum pattern and prepares the input files to run VASP calculations with SCAN+rVV10 functional, starting from PBE-relaxed `CONTCAR` (and `WAVECAR` if available).
 * `restart_soc.sh`: creates new sub-directories and prepares the input files to run a single-point density of states VASP calculation with spin-orbit coupling, starting from the appropriate relaxed `CONTCAR`.
+
+
+## Authors:
+Anne Marie Z. Tan
+
+
+## How to cite:
+BibTex entry for this Github repository::
+
+```
+   @misc{charged-defects-framework,
+     title        = {Framework for first-principles calculations of charged dopants and defects in 2D materials},
+     author       = {A. M. Z Tan},
+     year         = 2019,
+     publisher    = {GitHub},
+     journal      = {GitHub repository},
+     howpublished = {\url{https://github.com/aztan2/charged-defects-framework}},
+     url          = {https://github.com/aztan2/charged-defects-framework},
+     doi          = {}
+   }
+```
 
 
