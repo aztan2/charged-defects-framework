@@ -31,7 +31,7 @@ class Defect():
         return
     
             
-    def get_site_ind(self, siteind, sitesp):
+    def get_site_ind(self, ind, sp, offset_n1, offset_n2, offset_n1n2):
 
         ## figuring out min and max+1 indices for each species        
         syms = [site.specie.symbol for site in self.structure]
@@ -42,37 +42,53 @@ class Defect():
 
         ## initdef["index"] is a relative site index
         ## if possible, figure out a less clunky way to index...
-        if siteind < 0:
-            siteind_new = int(elem_minmax[sitesp][1]+siteind)
+        siteind_new = ind + offset_n1n2*nvecs[0]*nvecs[1] + offset_n1*nvecs[1] + offset_n2
+        if ind < 0:
+            siteind_new = int(elem_minmax[sp][1]+siteind_new)
         else:
-            siteind_new = int(elem_minmax[sitesp][0]+siteind)   
+            siteind_new = int(elem_minmax[sp][0]+siteind_new)   
         
         return siteind_new
     
 
     def get_defect_site(self, initdef):
+
+        ## this is relatively simple for vacancies and substitutionals
+        ## which by definition are a pre-existing site in the structure        
+        if initdef["type"][0] == "v" or initdef["type"][0] == "s":
+            siteind_new = self.get_site_ind(initdef["index"],initdef["species"],
+                                            initdef["index_offset_n1"],initdef["index_offset_n2"],
+                                            initdef["index_offset_n1n2"])
+            defect_site = structure_bulk[siteind_new]
         
-        if initdef["type"][0] == "v" or initdef["type"][0] == "s":            
-            defect_site = structure_bulk[self.get_site_ind(initdef["index"],initdef["species"])]
-            
+        ## for interstitials/adatoms, the defect site coords are defined
+        ## by the center (average) of the user-provided list of sites
         if initdef["type"][0] == "i" or initdef["type"][0] == "a":
             if len(initdef["index"]) != len(initdef["species"]):
                 raise ValueError ("inconsistency between index and species lists")
-            ## the defect site coords are defined by the center (average)
-            ## of the user-provided list of sites
+            for offset in ["index_offset_n1","index_offset_n2","index_offset_n1n2"]:
+                if initdef[offset] == 0:
+                    initdef[offset] = [0]*len(initdef["index"])
+
             defect_coords = np.array([0.,0.,0.])
-            for siteind,sitesp in zip(initdef["index"],initdef["species"]):
-                siteind_new = self.get_site_ind(siteind,sitesp)
+            ## loop through the list of sites
+            for ind,sp,offset_n1,offset_n2,offset_n1n2 in zip(initdef["index"],initdef["species"],
+                                                              initdef["index_offset_n1"],
+                                                              initdef["index_offset_n2"],
+                                                              initdef["index_offset_n1n2"]):
+                siteind_new = self.get_site_ind(ind,sp,offset_n1,offset_n2,offset_n1n2)
                 defect_coords += np.array(structure_bulk[siteind_new].frac_coords)
+            ## get the averaged position
             defect_coords = defect_coords/len(initdef["index"])
-            if initdef["shift_z"]:
+            if initdef.get("shift_z") != None:
+#            if initdef["shift_z"]:;
                 ## we may want to shift the z position, e.g. in the case of an adatom
                 defect_coords[2] += float(initdef["shift_z"])/self.structure.lattice.c
             ## create the defect_site as a PeriodicSite object
             defect_site = PeriodicSite(initdef["species_new"],defect_coords,
                                        lattice=self.structure.lattice,
                                        coords_are_cartesian=False)
-            
+        
         return defect_site
     
 
@@ -103,13 +119,13 @@ class Defect():
     
     
     def add_atom(self):
-     
+        
         for def_type,def_site in zip(self.defect_type,self.defect_site):
             if def_type[0] == "i" or def_type[0] == "a":
                 if def_site.frac_coords.tolist() in self.structure.frac_coords.tolist():
                     raise ValueError ("site already exists; can't add an atom here")
                 else:
-                    self.structure.append(defect_site.specie,def_site.frac_coords)
+                    self.structure.append(def_site.specie,def_site.frac_coords)
                 
         return
     
@@ -166,6 +182,10 @@ if __name__ == '__main__':
 
     ## set the defect info (type, site, species) for each defect listed in the json file
     for d in initdef:
+        initdef[d]["index_offset_n1"] = initdef[d].get("index_offset_n1",0)
+        initdef[d]["index_offset_n2"] = initdef[d].get("index_offset_n2",0)
+        initdef[d]["index_offset_n1n2"] = initdef[d].get("index_offset_n1n2",0)
+        print (initdef[d])
         defect_site = defect.get_defect_site(initdef[d])
 #        defect_site = structure_bulk[int(2*structure_bulk.num_sites/3-1)]
         if initdef[d]["type"][0] == "v": 
