@@ -58,34 +58,4 @@ if __name__ == '__main__':
     
     
 #    dir_main = "mp-2815_MoS2/"
-#    dir_main = "Y:/WSe2/monolayer/SCAN_vdW/mag/"
-
-#    for q in [0,-1]:
-#        for cell in [(5,5)]:
-#            for vac in [15,20]:
-#                
-#                dir_sub = dir_main+"charge_%d/%dx%dx1/vac_%d/"%(q,cell[0],cell[1],vac)
-#    
-#                kpts = Kpoints.gamma_automatic(kpts=(3, 3, 1), shift=(0, 0, 0))
-#                
-##                poscar = Poscar.from_file(dir_sub+"POSCAR")
-##                kpts = automatic_density_2d(poscar.structure, kppa=440, force_gamma=False)
-#                
-##                poscar = Poscar.from_file(dir_sub+"POSCAR")
-##                kpts = Kpoints.automatic_density(poscar.structure, kppa=8000, force_gamma=False)  
-#                
-#                print (kpts)
-#                Kpoints.write_file(kpts, dir_sub+"KPOINTS")
-
-
-#    for vac in [10,12,14,15,16,18,20]:
-#        
-#        dir_sub = dir_main+"vac_%d/"%(vac)
-#
-##        kpts = Kpoints.gamma_automatic(kpts=(3, 3, 1), shift=(0, 0, 0))
-#        
-#        poscar = Poscar.from_file(dir_sub+"POSCAR")
-#        kpts = automatic_density_2d(poscar.structure, kppa=440, force_gamma=False)
-#        
-#        print (kpts)
-#        Kpoints.write_file(kpts, dir_sub+"KPOINTS")    
+  

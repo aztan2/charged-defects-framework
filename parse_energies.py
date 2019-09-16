@@ -68,11 +68,11 @@ if __name__ == '__main__':
                 folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
 
                 if args.soc:  
-                    folder = joinpath(args.path,'charge_0',cell,vac,'dos','')
-                    folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','dos','')
+                    folder = joinpath(folder,'dos','')
+                    folder_ref = joinpath(folder_ref,'dos','')
                     logging.info("parsing dos subdirectory")
-                if 'restart' in listdironly(joinpath(args.path,'charge_0',cell,vac,'')):
-                    folder = joinpath(args.path,'charge_0',cell,vac,'restart','')
+                if os.path.exists(folder) and 'restart' in listdironly(folder):
+                    folder = joinpath(folder,'restart','')
                     logging.info("parsing restart subdirectory")
                                         
                 vr_file = joinpath(folder,'vasprun.xml')
@@ -116,10 +116,14 @@ if __name__ == '__main__':
             for vac in listdironly(joinpath(args.path,q,cell,'')):
                 logging.info("parsing %s %s %s"%(q,cell,vac))
 
-                if args.soc:
-                    folder = joinpath(args.path,q,cell,vac,'dos','')
-                else:
-                    folder = joinpath(args.path,q,cell,vac,'')
+                folder = joinpath(args.path,q,cell,vac,'')
+
+                if args.soc:  
+                    folder = joinpath(folder,'dos','')
+                    logging.info("parsing dos subdirectory")
+                if os.path.exists(folder) and 'restart' in listdironly(folder):
+                    folder = joinpath(folder,'restart','')
+                    logging.info("parsing restart subdirectory")
                     
                 vr_file = joinpath(folder,'vasprun.xml')
                 
