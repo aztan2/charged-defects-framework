@@ -10,7 +10,7 @@ This is currently a work in progress by Anne Marie Tan.
 
 Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas`, `matplotlib`, `argparse` which need to be installed beforehand.
 
-* `gen_defect_supercells.py`: generates a defect supercell given supercell size and vacuum spacing and write out the `POSCAR` and `defectproperty.json` files. ** the type and position of the defect to create is still hardcoded and requires the user to make changes in the script itself **
+* `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species are specified in a separate json input file.
 * `gen_incar.py`: generates an `INCAR` file with some standard settings depending on the user-specified runtype (relaxation/dos), functional (PBE/SCAN+rVV10).
 * `gen_kpts_grid.py`: generates a `KPOINTS` file with standard Monkorst-Pack grid and user-specified kpoint density.
 * `gen_submit.py`: generates a SLURM submison script for submitting jobs on HiPerGator. User can specify the queue, nodes, memory, time limit to be requested.
