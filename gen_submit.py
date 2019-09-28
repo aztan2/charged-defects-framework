@@ -59,10 +59,11 @@ if __name__ == '__main__':
  
 
     parser = argparse.ArgumentParser(description='Generate submit script')
+    parser.add_argument('--jobname',help='jobname',default='jobby')
+    parser.add_argument('--queue',help='queue',default='hennig')
     parser.add_argument('--nodes',type=int,help='number of nodes',default=1)
     parser.add_argument('--mem',type=int,help='memory per node',default=2048)
     parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
-    parser.add_argument('--queue',help='queue',default='hennig')
     parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
       
     ## read in the above arguments from command line
@@ -71,13 +72,16 @@ if __name__ == '__main__':
     
     ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
-   
-    with open(os.path.join(dir_sub,"defectproperty.json"), 'r') as file:
-        defprop = json.loads(file.read())
-    jobname = ("_".join(defprop["defect_type"])
-                +"_"+str(defprop["charge"])
-                +"_"+"x".join([str(m) for m in defprop["supercell"]])
-                +"_"+str(defprop["vacuum"]))
+ 
+    if os.path.exists(os.path.join(dir_sub,"defectproperty.json")):
+        with open(os.path.join(dir_sub,"defectproperty.json"), 'r') as file:
+            defprop = json.loads(file.read())
+        jobname = ("_".join(defprop["defect_type"])
+                    +"_"+str(defprop["charge"])
+                    +"_"+"x".join([str(m) for m in defprop["supercell"]])
+                    +"_"+str(defprop["vacuum"]))
+    else:
+        jobname = args.jobname
     print (jobname)
     
     s = '#!/bin/bash\n'
