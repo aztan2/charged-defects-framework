@@ -8,9 +8,10 @@ This is currently a work in progress by Anne Marie Tan.
 
 ## Python scripts: 
 
-Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas`, `matplotlib`, `argparse` which need to be installed beforehand.
+Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas`, `matplotlib` which need to be installed beforehand.
 
-* `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species are specified in a separate json input file.
+* `gen_unitcell_2D.py`: generates a unitcell `POSCAR` containing a monolayer surrounded by user-specified amount of vacuum. A starting `POSCAR` containing either the monolayer with an arbitrary amount of vacuum, or the layered bulk equivalent structure, must be provided (e.g. obtained from MaterialsProject or MaterialsWeb).
+* `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species must be specified in a separate json input file.
 * `gen_incar.py`: generates an `INCAR` file with some standard settings depending on the user-specified runtype (relaxation/dos), functional (PBE/SCAN+rVV10).
 * `gen_kpts_grid.py`: generates a `KPOINTS` file with standard Monkorst-Pack grid and user-specified kpoint density.
 * `gen_submit.py`: generates a SLURM submison script for submitting jobs on HiPerGator. User can specify the queue, nodes, memory, time limit to be requested.
