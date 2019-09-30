@@ -51,14 +51,20 @@ if __name__ == '__main__':
         for cell in listdironly(joinpath(args.path,q,'')): 
             for vac in listdironly(joinpath(args.path,q,cell,'')): 
                 logging.info("parsing %s %s %s"%(q,cell,vac))
-                if args.soc:  
-                    mypath = joinpath(args.path,q,cell,vac,'dos','correction','correction')
-                else:  
-                    mypath = joinpath(args.path,q,cell,vac,'correction','correction')
-                if not os.path.exists(mypath):
+                
+                folder = joinpath(args.path,q,cell,vac,'')
+                
+                if args.soc: 
+                    logging.info("parsing dos subdirectory")
+                    folder = joinpath(folder,'dos','')     
+                if os.path.exists(folder) and 'restart' in listdironly(folder):
+                    folder = joinpath(folder,'restart','')
+                    logging.info("parsing restart subdirectory")
+
+                if not os.path.exists(joinpath(folder,'correction','correction')):
                     logging.warning("correction file does not exist")
                 else:
-                    with open(mypath) as f:
+                    with open(joinpath(folder,'correction','correction')) as f:
                         lines = f.readlines()
                         for line in lines:
                             if line[:21] == 'iso - periodic energy':
