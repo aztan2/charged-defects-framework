@@ -95,6 +95,12 @@ def center_slab(structure):
 
     slab_center = np.average([s._fcoords[2] for s in structure.sites])
     structure.translate_sites(range(structure.num_sites), (0, 0, 0.5 - slab_center))
+
+    ## repeat this process to make sure it is properly centered
+    ## sometimes the slab center is wrongly identified the first time because of the PBC
+    ## after shifting it once, it *should* be away from such edge cases
+    slab_center = np.average([s._fcoords[2] for s in structure.sites])
+    structure.translate_sites(range(structure.num_sites), (0, 0, 0.5 - slab_center))
     
     return structure
 
