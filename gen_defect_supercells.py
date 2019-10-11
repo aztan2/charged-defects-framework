@@ -1,3 +1,4 @@
+import sys
 import os
 import json
 import argparse
@@ -13,8 +14,9 @@ from pymatgen.core.sites import Site,PeriodicSite
 
 class Defect():
     
-    def __init__(self, structure, supercell, vacuum, charge):
+    def __init__(self, structure_bulk, structure, supercell, vacuum, charge):
         
+        self.structure_bulk = structure_bulk
         self.structure = structure
         self.supercell = supercell
         self.vacuum = vacuum
@@ -42,7 +44,8 @@ class Defect():
 
         ## initdef["index"] is a relative site index
         ## if possible, figure out a less clunky way to index...
-        siteind_new = ind + offset_n1n2*nvecs[0]*nvecs[1] + offset_n1*nvecs[1] + offset_n2
+        siteind_new = (ind + offset_n1n2*self.supercell[0]*self.supercell[1]
+                           + offset_n1*self.supercell[1] + offset_n2)
         if ind < 0:
             siteind_new = int(elem_minmax[sp][1]+siteind_new)
         else:
@@ -56,10 +59,12 @@ class Defect():
         ## this is relatively simple for vacancies and substitutionals
         ## which by definition are a pre-existing site in the structure        
         if initdef["type"][0] == "v" or initdef["type"][0] == "s":
-            siteind_new = self.get_site_ind(initdef["index"],initdef["species"],
-                                            initdef["index_offset_n1"],initdef["index_offset_n2"],
+            siteind_new = self.get_site_ind(initdef["index"],
+                                            initdef["species"],
+                                            initdef["index_offset_n1"],
+                                            initdef["index_offset_n2"],
                                             initdef["index_offset_n1n2"])
-            defect_site = structure_bulk[siteind_new]
+            defect_site = self.structure_bulk[siteind_new]
         
         ## for interstitials/adatoms, the defect site coords are defined
         ## by the center (average) of the user-provided list of sites
@@ -72,12 +77,13 @@ class Defect():
 
             defect_coords = np.array([0.,0.,0.])
             ## loop through the list of sites
-            for ind,sp,offset_n1,offset_n2,offset_n1n2 in zip(initdef["index"],initdef["species"],
+            for ind,sp,offset_n1,offset_n2,offset_n1n2 in zip(initdef["index"],
+                                                              initdef["species"],
                                                               initdef["index_offset_n1"],
                                                               initdef["index_offset_n2"],
                                                               initdef["index_offset_n1n2"]):
                 siteind_new = self.get_site_ind(ind,sp,offset_n1,offset_n2,offset_n1n2)
-                defect_coords += np.array(structure_bulk[siteind_new].frac_coords)
+                defect_coords += np.array(self.structure_bulk[siteind_new].frac_coords)
             ## get the averaged position
             defect_coords = defect_coords/len(initdef["index"])
             if initdef.get("shift_z") != None:
@@ -142,9 +148,10 @@ class Defect():
                     
         return d
 
-    
-if __name__ == '__main__':
 
+def main(args):
+    
+    ## define a main function callable from another python script
     
     parser = argparse.ArgumentParser(description='Generate defect supercells.')
     parser.add_argument('dir_poscars',help='path to directory with unitcell POSCARs')
@@ -155,7 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--write_bulkref',help='to write bulkref?',default=False,action='store_true')
       
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
     
     ## the bash script already put us in the appropriate subdirectory
@@ -178,7 +185,7 @@ if __name__ == '__main__':
         initdef = json.loads(file.read())
 
     ## initialize defect object
-    defect = Defect(structure.copy(),supercell=nvecs,vacuum=args.vacuum,charge=args.q)
+    defect = Defect(structure_bulk,structure.copy(),nvecs,args.vacuum,args.q)
 
     ## set the defect info (type, site, species) for each defect listed in the json file
     for d in initdef:
@@ -220,41 +227,11 @@ if __name__ == '__main__':
       
     ## write json file
     with open(os.path.join(dir_sub,"defectproperty.json"), 'w') as file:
-         file.write(json.dumps(defect.as_dict(),indent=4)) # use `json.loads` to do the reverse
+         file.write(json.dumps(defect.as_dict(),indent=4)) # use `json.loads` to do the reverse   
     
+    
+if __name__ == '__main__':
 
-
-    ## BULK  
-#    dir_main = "mp-2815_MoS2/test/GGA/mag/charge_0/"
-#    if not os.path.exists(dir_main):
-#        os.makedirs(dir_main)
-#    
-#    for nvecs in [[3,3,1]]:
-#        dir_sub = dir_main+"%dx%dx%d/"%(nvecs[0],nvecs[1],nvecs[2])
-#            
-#        ## read in corresponding unit cell POSCAR
-#        poscar = Poscar.from_file("mp-2815_MoS2/bulk/GGA/expt_c/POSCAR")
-#        
-#        ## make undefected supercell
-#        structure = poscar.structure
-#        structure.make_supercell([nvecs[0],nvecs[1],nvecs[2]])
-#        structure_bulk = structure.copy()
-#        if not os.path.exists(dir_sub+"/bulkref"):
-#            os.makedirs(dir_sub+"/bulkref")
-#        Poscar.write_file(Poscar(structure_bulk),dir_sub+"bulkref/POSCAR")
-#        
-#        ## create S vacancy defect
-#        defect_site = structure_bulk[structure.num_sites-1]
-#        defect = Defect(structure,defect_type="vac_S",defect_site=defect_site,charge=0)
-#        defect.remove_atom()
-#        
-#        ## write defect POSCARS            
-#        if not os.path.exists(dir_sub):
-#            os.makedirs(dir_sub)
-#        Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),dir_sub+"POSCAR")
-#
-#        ## write json file
-#        with open(dir_sub+"defectproperty.json", 'w') as file:
-#             file.write(json.dumps(defect.as_dict(),indent=4)) # use `json.loads` to do the reverse
+    main(sys.argv[1:])    
 
     
