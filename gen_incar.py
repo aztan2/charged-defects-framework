@@ -1,3 +1,4 @@
+import sys
 import os
 import argparse
 import numpy as np
@@ -140,7 +141,7 @@ class IncarSettings:
 
         if ispin == 2:
             high_magmom, low_magmom = 0,0
-            for pc,atomnum in zip(potcar,poscar.natoms):
+            for pc,atomnum in zip(self.potcar,self.poscar.natoms):
                 if 'd' in [orb[1] for orb in pc.electron_configuration]:
                     high_magmom += atomnum
                 else:
@@ -215,19 +216,21 @@ class IncarSettings:
                 del self.params[param]
       
         return
-
-
-if __name__ == '__main__':
     
- 
+    
+def main(args):
+    
+    ## define a main function callable from another python script
+        
     parser = argparse.ArgumentParser(description='Generate INCAR')
     parser.add_argument('q',type=int,help='charge')
     parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands',default='relax')
     parser.add_argument('--functional',help='type of function: PBE(default)/SCAN+rVV10',default='PBE')
     parser.add_argument('--soc',help='turn on spin-orbit coupling',default=False,action='store_true')
+    parser.add_argument('--unitcell',help='relax unitcell lattice parameters',default=False,action='store_true')
       
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
 
     ## the bash script already put us in the appropriate subdirectory
@@ -246,68 +249,16 @@ if __name__ == '__main__':
     if args.soc:
         inc.mag(ncl=True)
         inc.soc()
-    inc.stripNone()       
+    if args.unitcell:
+        inc.ionicrelax(isif=3)
+        inc.parallel(lplane=True,npar=None,kpar=None)
+    inc.stripNone()      
     
     with open(os.path.join(dir_sub,"INCAR"),'w') as f:
         f.write(Incar.get_string(inc.params,sort_keys=False))
+
+
+if __name__ == '__main__':
     
-    
-#    func = "PBE"
-##    func = ["SCAN","rVV10"]
-#    if type(func) is not list:
-#        func = [func]
-##    runtype = "relax"
-##    runtype = "dos"
-#    runtype = "bands"
-#    
-##    dir_main = "mp-2815_MoS2/"
-##    dir_main = "Y:/MoS2/monolayer_Nbsub/SCAN_vdW/mag/"
-#    dir_main = "Y:/WSe2/monolayer/GGA/mag/"
-#    
-#    for q in [-2]:
-#        for cell in [(4,4),(5,5)]:
-#            for vac in [15,20]:
-#                
-#                dir_sub = dir_main+"charge_%d/%dx%dx1/vac_%d/"%(q,cell[0],cell[1],vac)
-#                if runtype == "dos":
-#                    dir_sub = dir_sub+"dos/"
-#                
-#                poscar = Poscar.from_file(dir_sub+"POSCAR")
-#                potcar = Potcar.from_file(dir_sub+"POTCAR")
-#                wavecar = os.path.exists(dir_sub+"WAVECAR")  ## just a boolean (does file exist)
-#                chgcar = os.path.exists(dir_sub+"CHGCAR")  ## just a boolean (does file exist)
-#
-#                inc = IncarSettings(func,runtype,q,poscar,potcar,wavecar,chgcar)
-#                inc.setparams()
-#                inc.stripNone()       
-#                
-#                with open(dir_sub+"INCAR",'w') as f:
-#                    f.write(Incar.get_string(inc.params,sort_keys=False))
-
-
-#    ## unitcell
-#    for vac in [10,12,14,15,16,18,20]:
-#        
-#        q = 0
-#        
-#        dir_sub = dir_main+"vac_%d/"%(vac)
-#        if runtype == "dos":
-#            dir_sub = dir_sub+"dos/"
-#        if runtype == "bands":
-#            dir_sub = dir_sub+"bands/"
-#        
-#        poscar = Poscar.from_file(dir_sub+"POSCAR")
-#        potcar = Potcar.from_file(dir_sub+"POTCAR")
-#        wavecar = os.path.exists(dir_sub+"WAVECAR")  ## just a boolean (does file exist)
-#        chgcar = os.path.exists(dir_sub+"CHGCAR")  ## just a boolean (does file exist)
-#
-#        inc = IncarSettings(func,runtype,q,poscar,potcar,wavecar,chgcar)
-#        inc.setparams()
-#        inc.ionicrelax(isif=3)
-#        inc.parallel(lplane=True,npar=None,kpar=None)
-#        inc.stripNone()       
-#        
-#        with open(dir_sub+"INCAR",'w') as f:
-#            f.write(Incar.get_string(inc.params,sort_keys=False))
-
-      
+    main(sys.argv[1:]) 
+   
