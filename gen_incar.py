@@ -223,7 +223,7 @@ def main(args):
     ## define a main function callable from another python script
         
     parser = argparse.ArgumentParser(description='Generate INCAR')
-    parser.add_argument('q',type=int,help='charge')
+    parser.add_argument('--q',type=int,help='charge (default 0)',default=0)
     parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands',default='relax')
     parser.add_argument('--functional',help='type of function: PBE(default)/SCAN+rVV10',default='PBE')
     parser.add_argument('--soc',help='turn on spin-orbit coupling',default=False,action='store_true')
