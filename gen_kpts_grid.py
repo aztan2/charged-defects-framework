@@ -1,3 +1,4 @@
+import sys
 import os
 import math
 import argparse
@@ -35,27 +36,25 @@ def automatic_density_2d(structure, kppa, force_gamma=False):
     return Kpoints(comment, 0, style, [num_div], [0, 0, 0])
 
 
-if __name__ == '__main__':
+def main(args):
     
-
     parser = argparse.ArgumentParser(description='Generate KPOINTS')
     parser.add_argument('--kppa',type=int,help='kpt density (pra)',default=440)
       
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
-
     ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
     
     poscar = Poscar.from_file(os.path.join(dir_sub,"POSCAR"))
-    kpts = automatic_density_2d(poscar.structure, args.kppa, force_gamma=False)
+    kpts = automatic_density_2d(poscar.structure, args.kppa, force_gamma=False) 
+    
+    Kpoints.write_file(kpts, os.path.join(dir_sub,"KPOINTS"))
 
-#    poscar = Poscar.from_file(dir_sub+"POSCAR")
-#    kpts = Kpoints.automatic_density(poscar.structure, kppa=8000, force_gamma=False)  
+
+if __name__ == '__main__':
     
-    Kpoints.write_file(kpts, os.path.join(dir_sub,"KPOINTS"))    
-    
-    
-#    dir_main = "mp-2815_MoS2/"
+    main(sys.argv[1:]) 
   
+    
