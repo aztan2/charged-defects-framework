@@ -1,14 +1,7 @@
+import sys
 import os
 import json
 import argparse
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import pymatgen
-from pymatgen.core.structure import Structure
-from pymatgen.core.lattice import Lattice
-from pymatgen.io.vasp.inputs import Poscar
-
 
 
 def sbatch_cmds(s,jobname,nodes,mem,time,qos):      
@@ -54,10 +47,10 @@ def load_modules(s,vasp="noz"):
     return s
 
 
-
-if __name__ == '__main__':
- 
-
+def main(args):
+    
+    ## define a main function callable from another python script
+    
     parser = argparse.ArgumentParser(description='Generate submit script')
     parser.add_argument('--jobname',help='jobname',default='jobby')
     parser.add_argument('--queue',help='queue',default='hennig')
@@ -67,12 +60,13 @@ if __name__ == '__main__':
     parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
       
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
     
     ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
- 
+    
+    
     if os.path.exists(os.path.join(dir_sub,"defectproperty.json")):
         with open(os.path.join(dir_sub,"defectproperty.json"), 'r') as file:
             defprop = json.loads(file.read())
@@ -93,49 +87,9 @@ if __name__ == '__main__':
     with open(os.path.join(dir_sub,"submitVASP.sh"),'w') as f:
         f.write(s)
 
-    
-#    dir_main = "mp-2815_MoS2/test/GGA/mag/"
-#    dir_main = "Y:/MoS2/monolayer_Nbsub/SCAN_vdW/mag/"
-#    dir_main = "Y:/WSe2/monolayer/SCAN_vdW/mag/"
-       
-#    for q in [0,-1]:
-#        for cell in [(4,4)]:
-#            for vac in [15,20]:
-#                
-#                dir_sub = dir_main+"charge_%d/%dx%dx1/vac_%d/"%(q,cell[0],cell[1],vac)
-#               
-#                with open(dir_sub+"defectproperty.json", 'r') as file:
-#                    defprop = json.loads(file.read())
-#                jobname = ("_".join(defprop["defect_type"])
-#                            +"_"+str(defprop["charge"])
-#                            +"_"+"x".join([str(m) for m in defprop["supercell"]])
-#                            +"_"+str(defprop["vacuum"]))
-#                print (jobname)
-#                
-#                s = '#!/bin/bash\n'
-#                s = sbatch_cmds(s,jobname=jobname,nodes=2)
-#                s += 'cd $SLURM_SUBMIT_DIR\n\n'
-#                s = load_modules(s)
-#                s += 'echo \'Done.\''
-#                
-#                with open(dir_sub+"submitVASP.sh",'w') as f:
-#                    f.write(s)
-                    
-                    
-#    for vac in [10,12,14,15,16,18,20]:
-#        
-#        dir_sub = dir_main+"vac_%d/"%(vac)
-#       
-#        jobname = "WSe2_vac"+str(vac)
-#        print (jobname)
-#        
-#        s = '#!/bin/bash\n'
-#        s = sbatch_cmds(s,jobname=jobname,nodes=1)
-#        s += 'cd $SLURM_SUBMIT_DIR\n\n'
-#        s = load_modules(s)
-#        s += 'echo \'Done.\''
-#        
-#        with open(dir_sub+"submitVASP.sh",'w') as f:
-#            f.write(s)
+
+if __name__ == '__main__':
+ 
+    main(sys.argv[1:])  
             
             
