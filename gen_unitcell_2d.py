@@ -41,7 +41,7 @@ def get_rotation_matrix(axis, theta):
 def align_axis(structure, axis='c', direction=(0, 0, 1)):
     
     """
-    Copied from MPInterfaces with some slight modification.
+    Copied from MPInterfaces with some modification.
     Rotates a structure so that the specified axis is along
     the [001] direction. This is useful for adding vacuum, and
     in general for using vasp compiled with no z-axis relaxation.
@@ -58,6 +58,7 @@ def align_axis(structure, axis='c', direction=(0, 0, 1)):
         
     """
 
+    ## rotate the specified axis to be along the 001 direction
     if axis == 'a':
         axis = structure.lattice._matrix[0]
     elif axis == 'b':
@@ -70,9 +71,18 @@ def align_axis(structure, axis='c', direction=(0, 0, 1)):
                  (np.linalg.norm(axis) * np.linalg.norm(direction))))
         R = get_rotation_matrix(rot_axis, theta)
         rotation = SymmOp.from_rotation_and_translation(rotation_matrix=R)
-        structure.apply_operation(rotation)
-#    if axis == 'c' and direction == (0, 0, 1):
-#        structure.lattice._matrix[2][2] = abs(structure.lattice._matrix[2][2])
+        structure.apply_operation(rotation,fractional=False)
+
+    ## rotate such that the 001 direction lies along the 'c' axis
+    axis = structure.lattice._matrix[2]  
+    rot_axis = np.cross(direction, axis)
+    if not(rot_axis[0] == 0 and rot_axis[1] == 0):
+        theta = (np.arccos(np.dot(axis, direction) / 
+                 (np.linalg.norm(axis) * np.linalg.norm(direction))))
+        R = get_rotation_matrix(rot_axis, theta)
+        rotation = SymmOp.from_rotation_and_translation(rotation_matrix=R)
+        structure.apply_operation(rotation,fractional=True)
+#    structure.lattice._matrix[2][2] = abs(structure.lattice._matrix[2][2])
 
     return structure
 
@@ -80,7 +90,7 @@ def align_axis(structure, axis='c', direction=(0, 0, 1)):
 def center_slab(structure):
     
     """
-    Copied from MPInterfaces with some slight modification.
+    Copied from MPInterfaces with some modification.
     Centers the atoms in a slab structure around 0.5 fractional height.
 
     Parameters
@@ -93,15 +103,18 @@ def center_slab(structure):
         
     """
 
+    ## attempt to catch literal edge cases
+    ## in which the layers are centered around 0.0, e.g. at ~0.1 and ~0.9
     slab_center = np.average([s._fcoords[2] for s in structure.sites])
-    structure.translate_sites(range(structure.num_sites), (0, 0, 0.5 - slab_center))
+    if any([abs(s._fcoords[2]-slab_center) > 0.25 for s in structure.sites]):
+        structure.translate_sites(range(structure.num_sites), (0, 0, 0.5))
 
     ## repeat this process to make sure it is properly centered
     ## sometimes the slab center is wrongly identified the first time because of the PBC
-    ## after shifting it once, it *should* be away from such edge cases
+    ## after shifting it once, it *should* be away from such edge cases    
     slab_center = np.average([s._fcoords[2] for s in structure.sites])
     structure.translate_sites(range(structure.num_sites), (0, 0, 0.5 - slab_center))
-    
+
     return structure
 
 
@@ -180,43 +193,6 @@ def layer_from_bulk(struct_bulk,slabmin,slabmax):
 
     return struct_layer
 
-
-#def unitcell_hexagonal(vac,a0,d):
-#    
-#    ## HARDCODED hexagonal unitcell for MoS2
-#    ## d is the layer thickness (S-S distance in this case)
-#      
-#    c = d + vac
-#    Sz = d/2/c 
-#    
-#    coords = [[0.3333333333333333, 0.6666666666666667, 0.5],
-#              [0.6666666666666667,  0.3333333333333333, 0.5+Sz],
-#              [0.6666666666666667,  0.3333333333333333, 0.5-Sz]]
-#    lattice = Lattice.from_parameters(a=a0, b=a0, c=c,
-#                                      alpha=90, beta=90, gamma=120)
-#    
-#    return (Structure(lattice,["Mo","S","S"],coords))
-#
-#
-#def unitcell_orthorhombic(vac,a0,d):
-#    
-#    ## HARDCODED orthorhombic unitcell for MoS2
-#    ## d is the layer thickness (S-S distance in this case)
-#      
-#    c = d + vac
-#    Sz = d/2/c 
-#    
-#    coords = [[0.0, 0.3333333333333333, 0.5],
-#              [0.5, 0.8333333333333333, 0.5],
-#              [0.0, 0.6666666666666667, 0.5+Sz],
-#              [0.0, 0.6666666666666667, 0.5-Sz],
-#              [0.5, 0.1666666666666667, 0.5+Sz],
-#              [0.5, 0.1666666666666667, 0.5-Sz]]
-#    lattice = Lattice.from_parameters(a=a0, b=np.sqrt(3)*a0, c=c,
-#                                      alpha=90, beta=90, gamma=90)
-#
-#    return (Structure(lattice,["Mo","Mo","S","S","S","S"],coords))
-
     
 if __name__ == '__main__':
     
@@ -224,6 +200,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate 2D unitcell.')
     parser.add_argument('path_poscar',help='path to unitcell POSCAR')
     parser.add_argument('vacuum',type=int,help='vacuum spacing')
+    parser.add_argument('--zaxis',help='axis perpendicular to layer (a/b/c)',default='c')
     parser.add_argument('--from_bulk',help='extract layer from bulk?',
                         default=False,action='store_true')
     parser.add_argument('--slabmin',type=float,
@@ -241,13 +218,13 @@ if __name__ == '__main__':
     
     
     poscar = Poscar.from_file(args.path_poscar, check_for_POTCAR=False) 
-     
-    struct = align_axis(poscar.structure)
+    
+    struct = align_axis(poscar.structure,axis=args.zaxis)
     if args.from_bulk:
         if args.slabmin == None or args.slabmax == None:
             raise ValueError('missing slabmin and/or slabmax argument')
         else:
-            struct = layer_from_bulk(struct,args.slabmin,args.slabmax)  
+            struct = layer_from_bulk(struct,args.slabmin,args.slabmax)       
     slab_d = get_slab_thickness(struct)
     struct = add_vacuum(struct, args.vacuum - (struct.lattice.c - slab_d))
     struct = center_slab(struct)
