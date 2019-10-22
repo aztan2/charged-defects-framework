@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 import numpy as np
 from pymatgen.core.operations import SymmOp
 from pymatgen import Structure,Lattice
