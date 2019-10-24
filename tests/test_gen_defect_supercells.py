@@ -39,7 +39,7 @@ class Test2D(unittest.TestCase):
                                   "def2": {"type": "vac", "index": -1, "species": "O", 
                                            "index_offset_n1n2": -1}})
         self.initdef_list.append({"def1": {"type": "ad", "index": [-1], "species": ["O"], 
-                                           "species_new": "N", "shift_z": "3.0"}})    
+                                           "species_new": "N", "shift_z": "3.0"}})      
         self.initdef_list.append({"def1": {"type": "int", "index": [0,0,0,0],
                                            "index_offset_n1": [0,1,0,0], 
                                            "index_offset_n2": [0,0,0,2],
@@ -47,7 +47,7 @@ class Test2D(unittest.TestCase):
                                            "species": 4*["O"], "species_new": "N"}})
         self.create_defects()
 
-        self.siteinds_list = [[0],[17],[17,8],[[17]],[[0,3,9,11]]]  
+        self.siteinds_list = [[0],[17],[17,8],[[17]],[[0,3,9,11]]]
         self.defcoords_list = [[[0.0,0.0,0.1]],[[0.833333,0.833333,0.3]],
                                [[0.833333,0.833333,0.3],[0.666667,0.666667,0.1]],
                                [[0.833333,0.833333,0.45]],[[0.166667,0.0,0.2]]]
@@ -120,11 +120,13 @@ class Test2D(unittest.TestCase):
         ## test that the defect(s) are created at the correct position
         ## essentially tests the get_defect_site function
 
-        for defects,defcoords in zip(self.defects_list,self.defcoords_list):
-            for defect_site,defcoord in zip(defects.defect_site,defcoords):
+        for defects,defcoords_ref in zip(self.defects_list,self.defcoords_list):
+            for defect_site,defcoord_ref in zip(defects.defect_site,defcoords_ref):
+                defcoord = defect_site.lattice.get_fractional_coords(defect_site.coords)
+#                defcoord = defect_site.frac_coords
                 for j in range(3):
-                    self.assertAlmostEqual(defect_site.frac_coords[j]%1%1,
-                                           defcoord[j]%1%1,places=6)  
+                    self.assertAlmostEqual(defcoord[j]%1%1,
+                                           defcoord_ref[j]%1%1,places=6)  
 
 
     def test_natoms(self):

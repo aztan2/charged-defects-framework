@@ -9,7 +9,7 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     import pymatgen
 from pymatgen.io.vasp.inputs import Poscar
-from pymatgen.core.sites import Site,PeriodicSite
+from pymatgen.core.sites import PeriodicSite
 
 
 class Defect():

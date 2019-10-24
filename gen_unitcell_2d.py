@@ -105,14 +105,14 @@ def center_slab(structure):
 
     ## attempt to catch literal edge cases
     ## in which the layers are centered around 0.0, e.g. at ~0.1 and ~0.9
-    slab_center = np.average([s._fcoords[2] for s in structure.sites])
-    if any([abs(s._fcoords[2]-slab_center) > 0.25 for s in structure.sites]):
+    slab_center = np.average([s.frac_coords[2] for s in structure.sites])
+    if any([abs(s.frac_coords[2]-slab_center) > 0.25 for s in structure.sites]):
         structure.translate_sites(range(structure.num_sites), (0, 0, 0.5))
 
     ## repeat this process to make sure it is properly centered
     ## sometimes the slab center is wrongly identified the first time because of the PBC
     ## after shifting it once, it *should* be away from such edge cases    
-    slab_center = np.average([s._fcoords[2] for s in structure.sites])
+    slab_center = np.average([s. frac_coords[2] for s in structure.sites])
     structure.translate_sites(range(structure.num_sites), (0, 0, 0.5 - slab_center))
 
     return structure
@@ -162,7 +162,7 @@ def add_vacuum(structure, vacuum):
     structure = align_axis(structure)
     coords = [s.coords for s in structure.sites]
     species = [s.specie for s in structure.sites]
-    lattice = structure.lattice.matrix
+    lattice = structure.lattice.matrix.copy()
     lattice[2][2] += vacuum
     structure = Structure(lattice, species, coords, coords_are_cartesian=True)
     
@@ -233,5 +233,5 @@ if __name__ == '__main__':
     dir_sub = os.path.join(dir_main,"vac_%d"%args.vacuum)
     if not os.path.exists(dir_sub):
         os.makedirs(dir_sub)
-    Poscar.write_file(Poscar(struct),os.path.join(dir_sub,"POSCARtest"))
+    Poscar.write_file(Poscar(struct),os.path.join(dir_sub,"POSCAR"))
 

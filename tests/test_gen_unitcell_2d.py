@@ -74,7 +74,7 @@ class Test2D(unittest.TestCase):
         
         for s1,s2 in zip(self.structure.sites,structure_rot2.sites):
             for j in range(3):
-                self.assertAlmostEqual(s1._fcoords[j]%1%1,s2._fcoords[j]%1%1,places=8)        
+                self.assertAlmostEqual(s1.frac_coords[j]%1%1,s2.frac_coords[j]%1%1,places=8)        
         
 
     def test_center_slab(self):
@@ -86,7 +86,7 @@ class Test2D(unittest.TestCase):
             struct = self.structure.copy()
             struct.translate_sites(range(self.structure.num_sites), (0, 0, shift))
             struct = gen_unitcell_2d.center_slab(struct)
-            slab_center = np.average([s._fcoords[2] for s in struct.sites])  
+            slab_center = np.average([s.frac_coords[2] for s in struct.sites])  
             
             self.assertAlmostEqual(slab_center,0.5,places=8)
 
@@ -101,7 +101,7 @@ class Test2D(unittest.TestCase):
         for s1,s2 in zip(gen_unitcell_2d.center_slab(self.structure).sites,
                          gen_unitcell_2d.center_slab(struct_layer).sites):
             for j in range(3):
-                self.assertAlmostEqual(s1._fcoords[j]%1%1,s2._fcoords[j]%1%1,places=8)  
+                self.assertAlmostEqual(s1.frac_coords[j]%1%1,s2.frac_coords[j]%1%1,places=8)  
                 
 
 class Test2D_WSe2(Test2D):
