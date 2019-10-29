@@ -14,6 +14,7 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 * `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species must be specified in a separate json input file.
 * `gen_incar.py`: generates an `INCAR` file with some standard settings depending on the user-specified runtype (relaxation/dos), functional (PBE/SCAN+rVV10).
 * `gen_kpts_grid.py`: generates a `KPOINTS` file with standard Monkorst-Pack grid and user-specified kpoint density.
+* `gen_kpts_line.py`: generates a linemode `KPOINTS` file for bandstructure calculations. Option to generate special KPOINTS required for SCAN/HSE bandstructure calculations.
 * `gen_submit.py`: generates a SLURM submison script for submitting jobs on HiPerGator. User can specify the queue, nodes, memory, time limit to be requested.
 
 * `gen_SPHInX_input_file.py`: generates the input file required for the [Freysoldt 2D charge correction scheme](https://doi.org/10.1103/PhysRevB.97.205425).
