@@ -178,13 +178,15 @@ def main(args):
     parser.add_argument('q',type=int,help='charge')
     parser.add_argument('supercell',help='supercell size')
     parser.add_argument('vacuum',type=int,help='vacuum spacing')
-    parser.add_argument('--write_bulkref',help='to write bulkref?',default=False,action='store_true')
+    parser.add_argument('--write_bulkref',help='to write bulkref?',
+                        default=False,action='store_true')
       
-    ## read in the above arguments from command line
+    ## parse the given arguments
     args = parser.parse_args(args)
-    
-    
-    ## the bash script already put us in the appropriate subdirectory
+
+    ## this script should be called from within
+    ## the appropriate charge/cell/vacuum subdirectory
+    ## get the current working directory
     dir_sub = os.getcwd()
     
     
@@ -198,43 +200,42 @@ def main(args):
     structure.make_supercell([nvecs[0],nvecs[1],nvecs[2]])
     structure_bulk = structure.copy()
     
-    
-    # read in defect details from initdefect json file
-    with open(args.json_initdef, 'r') as file:
-        initdef = json.loads(file.read())
-
-    ## initialize defect object
-    defect = Defect(structure_bulk,structure.copy(),nvecs,args.vacuum,args.q)
-
-    ## set the defect info (type, site, species) for each defect listed in the json file
-    for d in initdef:
-        initdef[d]["index_offset_n1"] = initdef[d].get("index_offset_n1",0)
-        initdef[d]["index_offset_n2"] = initdef[d].get("index_offset_n2",0)
-        initdef[d]["index_offset_n1n2"] = initdef[d].get("index_offset_n1n2",0)
-        print (initdef[d])
-        defect_site = defect.get_defect_site(initdef[d])[0]
-        defect.add_defect_info(initdef[d],defect_site)  
-
-    ## create vacancy defect(s)           
-    defect.remove_atom()
-    ## create substitutional defect(s)
-    defect.replace_atom()
-    ## create interstitial defect(s)
-    defect.add_atom()     
-
-    ## write POSCAR
-    Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),os.path.join(dir_sub,"POSCAR"))
-    
-    ## write bulkref POSCAR
     if args.write_bulkref:
-        if args.q == 0:
-            if not os.path.exists(os.path.join(dir_sub,"bulkref")):
-                os.makedirs(os.path.join(dir_sub,"bulkref"))
-            Poscar.write_file(Poscar(structure_bulk),os.path.join(dir_sub,"bulkref","POSCAR"))
-      
-    ## write json file
-    with open(os.path.join(dir_sub,"defectproperty.json"), 'w') as file:
-         file.write(json.dumps(defect.as_dict(),indent=4)) # use `json.loads` to do the reverse   
+        ## write bulkref POSCAR
+        Poscar.write_file(Poscar(structure_bulk),
+                          os.path.join(dir_sub,"POSCAR"))
+        
+    else: 
+        # read in defect details from initdefect json file
+        with open(args.json_initdef, 'r') as file:
+            initdef = json.loads(file.read())
+    
+        ## initialize defect object
+        defect = Defect(structure_bulk,structure.copy(),nvecs,args.vacuum,args.q)
+    
+        ## set the defect info (type, site, species) for each defect listed in the json file
+        for d in initdef:
+            initdef[d]["index_offset_n1"] = initdef[d].get("index_offset_n1",0)
+            initdef[d]["index_offset_n2"] = initdef[d].get("index_offset_n2",0)
+            initdef[d]["index_offset_n1n2"] = initdef[d].get("index_offset_n1n2",0)
+            print (initdef[d])
+            defect_site = defect.get_defect_site(initdef[d])[0]
+            defect.add_defect_info(initdef[d],defect_site)  
+    
+        ## create vacancy defect(s)           
+        defect.remove_atom()
+        ## create substitutional defect(s)
+        defect.replace_atom()
+        ## create interstitial defect(s)
+        defect.add_atom()     
+    
+        ## write defect POSCAR
+        Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),
+                          os.path.join(dir_sub,"POSCAR"))
+          
+        ## write json file
+        with open(os.path.join(dir_sub,"defectproperty.json"), 'w') as file:
+             file.write(json.dumps(defect.as_dict(),indent=4))  
     
     
 if __name__ == '__main__':

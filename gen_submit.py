@@ -25,10 +25,14 @@ def sbatch_cmds(s,jobname,nodes,mem,time,qos):
     return s
 
 
-def load_modules(s,vasp="noz"):      
+def load_modules(s,vasp="noz_intel2019"):      
 
     s += 'module purge\n'
-    if vasp == "noz":
+    if vasp == "noz_intel2019":
+        s += 'module load intel/2019.1.144\n'
+        s += 'module load openmpi/4.0.1\n'
+        s += 'srun --mpi=pmix_v3 /home/annemarietan/vasp5.4.4_intel2019/vasp_noz > job.log\n\n'
+    elif vasp == "noz":
         s += 'module load intel/2018\n'
         s += 'module load openmpi/3.1.0\n'
         s += 'srun --mpi=pmix_v1 /home/annemarietan/vasp_noz > job.log\n\n'
@@ -57,7 +61,7 @@ def main(args):
     parser.add_argument('--nodes',type=int,help='number of nodes',default=1)
     parser.add_argument('--mem',type=int,help='memory per node',default=2048)
     parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
-    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
+    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz_intel2019')
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)
