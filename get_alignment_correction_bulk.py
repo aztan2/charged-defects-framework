@@ -15,9 +15,9 @@ def get_skiprows(f):
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description='Estimate alignment correction in bulk systems. \n'
-                                     'You must already have run the sxdefectalign script once'
+                                     'You must already have run the sxdefectalign script once '
                                      'to generate the vline-eV-a0/1/2.dat files. \n'
-                                     'Afterwards, run the sxdefectalign script again'
+                                     'Afterwards, run the sxdefectalign script again '
                                      'with the additional tag -C <averaged alignment correction>')
     parser.add_argument('defpos_a0',type=float,
                         help='position of defect along first axis (relative coords)')
