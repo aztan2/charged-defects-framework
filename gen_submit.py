@@ -25,7 +25,7 @@ def sbatch_cmds(s,jobname,nodes,mem,time,qos):
     return s
 
 
-def load_modules(s,vasp="noz_intel2019"):      
+def load_modules(s,vasp="noz"):      
 
     s += 'module purge\n'
     if vasp == "noz_intel2019":
@@ -61,7 +61,7 @@ def main(args):
     parser.add_argument('--nodes',type=int,help='number of nodes',default=1)
     parser.add_argument('--mem',type=int,help='memory per node',default=2048)
     parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
-    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz_intel2019')
+    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)

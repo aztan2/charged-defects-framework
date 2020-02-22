@@ -10,6 +10,7 @@ This is currently a work in progress by Anne Marie Tan.
 
 Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas`, `matplotlib` which need to be installed beforehand.
 
+* `setup_defects.py`: creates new sub-directories in the charge/supercell/vacuum pattern for a given defect, and runs `gen_defect_supercells.py`, `gen_incar.py`, `gen_kpts_grid.py`, and `gen_submit.py` to generate all the required input files for a VASP calculation. This script assumes that the parent directory from which this is run contains the appropriate unitcell `POSCAR` and `POTCAR` files.
 * `gen_unitcell_2D.py`: generates a unitcell `POSCAR` containing a monolayer surrounded by user-specified amount of vacuum. A starting `POSCAR` containing either the monolayer with an arbitrary amount of vacuum, or the layered bulk equivalent structure, must be provided (e.g. obtained from MaterialsProject or MaterialsWeb).
 * `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species must be specified in a separate json input file.
 * `gen_incar.py`: generates an `INCAR` file with some standard settings depending on the user-specified runtype (relaxation/dos), functional (PBE/SCAN+rVV10).
@@ -19,7 +20,7 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 
 * `gen_SPHInX_input_file.py`: generates the input file required for the [Freysoldt 2D charge correction scheme](https://doi.org/10.1103/PhysRevB.97.205425).
 * `get_alignment_correction_2d.py`: iteratively applies the [sxdefectalign2d script](https://sxrepo.mpie.de/projects/sphinx-add-ons/files) until the optimal charge position and correction energy are obtained.
-* `get_alignment_correction.py`: post-processing of the [sxdefectalign script](https://sxrepo.mpie.de/projects/sphinx-add-ons/files) to determine an averaged alignment correction for the 3D case. (this script is old and has not been tested recently)
+* `get_alignment_correction_bulk.py`: post-processing of the [sxdefectalign script](https://sxrepo.mpie.de/projects/sphinx-add-ons/files) to determine an averaged alignment correction for the bulk case.
 
 * `parse_energies.py`: parses the total energies from VASP `vasprun.xml` files, stores in a pandas dataframe, and writes out to an excel file.
 * `parse_corrections.py`: parses the correction energies computed by sxdefectalign2d, adds to the pandas dataframe, and writes out to an excel file.
@@ -27,7 +28,7 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 
 ## Bash scripts: 
 
-* `setup_defects.sh`: creates new sub-directories in the charge/supercell/vacuum pattern for a given defect, and runs `gen_defect_supercells.py`, `gen_incar.py`, `gen_kpts_grid.py`, and `gen_submit.py` to generate all the required input files for a VASP calculation. This script assumes that the parent directory from which this is run contains the appropriate unitcell `POSCAR` and `POTCAR` files.
+* `setup_defects.sh`: essentially the legacy bash script version of `setup_defects.py`
 * `apply_correction_loop.sh`: runs `gen_SPHInX_input_file.py` followed by `get_alignment_correction_2d.py` in all relevant sub-directories (ignoring neutral defects)
 * `restart_SCAN.sh`: creates new sub-directories in the charge/supercell/vacuum pattern and prepares the input files to run VASP calculations with SCAN+rVV10 functional, starting from PBE-relaxed `CONTCAR` (and `WAVECAR` if available).
 * `restart_soc.sh`: creates new sub-directories and prepares the input files to run a single-point density of states VASP calculation with spin-orbit coupling, starting from the appropriate relaxed `CONTCAR`.
