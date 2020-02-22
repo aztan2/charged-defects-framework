@@ -3,17 +3,7 @@ import argparse
 import logging
 import numpy as np
 import pandas as pd
-
-
-def listdironly(path):
-    
-    return [d for d in os.listdir(path) if os.path.isdir(path+d) == True]
-
-
-def joinpath(path,*paths):
-    
-    ## force the paths to have forward slash (unix-style)
-    return os.path.join(path,*paths).replace('\\','/')
+import myutils
 
 
 if __name__ == '__main__':
@@ -41,30 +31,30 @@ if __name__ == '__main__':
 
 
     ## load list of dataframes from sheets from excel file    
-    df = pd.read_excel(joinpath(args.path,args.xlfile),sheet_name=None)
+    df = pd.read_excel(myutils.joinpath(args.path,args.xlfile),sheet_name=None)
        
     for q in [qi for qi in df.keys() if qi != 'charge_0']:
         df[q]['E_corr'] = np.nan
 
 
-    for q in listdironly(joinpath(args.path,'')):
-        for cell in listdironly(joinpath(args.path,q,'')): 
-            for vac in listdironly(joinpath(args.path,q,cell,'')): 
+    for q in myutils.listdironly(myutils.joinpath(args.path,'')):
+        for cell in myutils.listdironly(myutils.joinpath(args.path,q,'')): 
+            for vac in myutils.listdironly(myutils.joinpath(args.path,q,cell,'')): 
                 logging.info("parsing %s %s %s"%(q,cell,vac))
                 
-                folder = joinpath(args.path,q,cell,vac,'')
+                folder = myutils.joinpath(args.path,q,cell,vac,'')
                 
                 if args.soc: 
                     logging.info("parsing dos subdirectory")
-                    folder = joinpath(folder,'dos','')     
-                if os.path.exists(folder) and 'restart' in listdironly(folder):
-                    folder = joinpath(folder,'restart','')
+                    folder = myutils.joinpath(folder,'dos','')     
+                if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
+                    folder = myutils.joinpath(folder,'restart','')
                     logging.info("parsing restart subdirectory")
 
-                if not os.path.exists(joinpath(folder,'correction','correction')):
+                if not os.path.exists(myutils.joinpath(folder,'correction','correction')):
                     logging.warning("correction file does not exist")
                 else:
-                    with open(joinpath(folder,'correction','correction')) as f:
+                    with open(myutils.joinpath(folder,'correction','correction')) as f:
                         lines = f.readlines()
                         for line in lines:
                             if line[:21] == 'iso - periodic energy':
@@ -90,7 +80,7 @@ if __name__ == '__main__':
 
 
     ## write the updated excel file
-    writer = pd.ExcelWriter(joinpath(args.path,args.xlfile))
+    writer = pd.ExcelWriter(myutils.joinpath(args.path,args.xlfile))
     for q in df.keys():  
         df[q].to_excel(writer, q)
     writer.save()    

@@ -6,17 +6,7 @@ import numpy as np
 import pandas as pd
 from pymatgen.io.vasp.inputs import Poscar
 from pymatgen.io.vasp.outputs import Outcar, Vasprun
-
-
-def listdironly(path):
-    
-    return [d for d in os.listdir(path) if os.path.isdir(path+d) == True]
-
-
-def joinpath(path,*paths):
-    
-    ## force the paths to have forward slash (unix-style)
-    return os.path.join(path,*paths).replace('\\','/')
+import myutils
 
 
 if __name__ == '__main__':
@@ -43,9 +33,9 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
 
-    qs = listdironly(args.path)
+    qs = myutils.listdironly(args.path)
     
-    writer = pd.ExcelWriter(joinpath(args.path,args.xlfile))
+    writer = pd.ExcelWriter(myutils.joinpath(args.path,args.xlfile))
 
     time0 = time.time()    
 
@@ -60,23 +50,23 @@ if __name__ == '__main__':
                                       'E_def',
                                       'E_bulk'])
     
-        for cell in listdironly(joinpath(args.path,'charge_0','')):
-            for vac in listdironly(joinpath(args.path,'charge_0',cell,'')):   
+        for cell in myutils.listdironly(myutils.joinpath(args.path,'charge_0','')):
+            for vac in myutils.listdironly(myutils.joinpath(args.path,'charge_0',cell,'')):   
                 logging.info("parsing neutral %s %s"%(cell,vac))
 
-                folder = joinpath(args.path,'charge_0',cell,vac,'')
-                folder_ref = joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+                folder = myutils.joinpath(args.path,'charge_0',cell,vac,'')
+                folder_ref = myutils.joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
 
                 if args.soc:  
-                    folder = joinpath(folder,'dos','')
-                    folder_ref = joinpath(folder_ref,'dos','')
+                    folder = myutils.joinpath(folder,'dos','')
+                    folder_ref = myutils.joinpath(folder_ref,'dos','')
                     logging.info("parsing dos subdirectory")
-                if os.path.exists(folder) and 'restart' in listdironly(folder):
-                    folder = joinpath(folder,'restart','')
+                if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
+                    folder = myutils.joinpath(folder,'restart','')
                     logging.info("parsing restart subdirectory")
                                         
-                vr_file = joinpath(folder,'vasprun.xml')
-                vr_ref_file = joinpath(folder_ref,'vasprun.xml')
+                vr_file = myutils.joinpath(folder,'vasprun.xml')
+                vr_ref_file = myutils.joinpath(folder_ref,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
                     logging.warning("%s file does not exist"%vr_file)
@@ -85,7 +75,7 @@ if __name__ == '__main__':
                     logging.warning("%s file does not exist"%vr_ref_file)
                     
                 else:
-                    natoms = np.sum(Poscar.from_file(joinpath(folder_ref,'POSCAR')).natoms)
+                    natoms = np.sum(Poscar.from_file(myutils.joinpath(folder_ref,'POSCAR')).natoms)
                     vr = Vasprun(vr_file)
                     vr_ref = Vasprun(vr_ref_file)
                     
@@ -94,7 +84,7 @@ if __name__ == '__main__':
                                         %folder)                    
                     if not vr_ref.converged:
                         logging.warning("Vasp calculation in %s may not be converged"
-                                        %(joinpath(folder,'bulkref','')))
+                                        %(myutils.joinpath(folder,'bulkref','')))
                     
                     df0.loc[len(df0)] = [vac,
                                          cell,
@@ -112,20 +102,20 @@ if __name__ == '__main__':
     for q in [qi for qi in qs if qi != 'charge_0']:
         df = df0.copy(deep=True)
         
-        for cell in listdironly(joinpath(args.path,q,'')):
-            for vac in listdironly(joinpath(args.path,q,cell,'')):
+        for cell in myutils.listdironly(myutils.joinpath(args.path,q,'')):
+            for vac in myutils.listdironly(myutils.joinpath(args.path,q,cell,'')):
                 logging.info("parsing %s %s %s"%(q,cell,vac))
 
-                folder = joinpath(args.path,q,cell,vac,'')
+                folder = myutils.joinpath(args.path,q,cell,vac,'')
 
                 if args.soc:  
-                    folder = joinpath(folder,'dos','')
+                    folder = myutils.joinpath(folder,'dos','')
                     logging.info("parsing dos subdirectory")
-                if os.path.exists(folder) and 'restart' in listdironly(folder):
-                    folder = joinpath(folder,'restart','')
+                if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
+                    folder = myutils.joinpath(folder,'restart','')
                     logging.info("parsing restart subdirectory")
                     
-                vr_file = joinpath(folder,'vasprun.xml')
+                vr_file = myutils.joinpath(folder,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
                     logging.warning("%s file does not exist"%vr_file)
