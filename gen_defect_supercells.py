@@ -81,19 +81,30 @@ class Defect():
             
             ## get the averaged position
             coords_ref = self.structure_bulk[siteind_new[0]].frac_coords
-            defect_coords = coords_ref
+            print (coords_ref)
+            defect_coords = coords_ref.copy()
             for i in siteind_new[1:]:
                 coords = self.structure_bulk[i].frac_coords
+                print (coords,coords_ref,np.array(coords[0:3])-np.array(coords_ref[0:3]))
                 for j in [0,1,2]:
-                    if abs(coords[j] - coords_ref[j]) > 0.5:  ## dealing with pbc 
+                    if abs(coords[j] - coords_ref[j]) > 0.501:  ## dealing with pbc 
                         if coords[j] > coords_ref[j]: coords[j] -= 1.0
                         else: coords[j] += 1.0
+                print (coords)
                 defect_coords += coords
             defect_coords = defect_coords/len(siteind_new)
+            print (defect_coords)
+
+            ## we may want to further shift the x-y position manually
+            M = self.structure.lattice.matrix
+            if initdef.get("shift_x") != None:
+                defect_coords += float(initdef["shift_x"]) * np.linalg.inv(M)[0,:]
+            if initdef.get("shift_y") != None:
+                defect_coords += float(initdef["shift_y"]) * np.linalg.inv(M)[1,:]
 
             ## we may want to shift the z position, e.g. in the case of an adatom            
             if initdef.get("shift_z") != None:
-                defect_coords[2] += float(initdef["shift_z"])/self.structure.lattice.c
+                defect_coords += float(initdef["shift_z"]) * np.linalg.inv(M)[2,:]
             
             ## create the defect_site as a PeriodicSite object
             defect_site = PeriodicSite(initdef["species_new"],defect_coords,
