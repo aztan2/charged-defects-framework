@@ -105,6 +105,11 @@ class IncarSettings:
         if self.runtype in ("dos","bands"):
             ibrion = -1
             nsw = 0
+            
+        if self.runtype == "dielectric":
+            ## get the ionic contribution to the macroscopic
+            ## dielectric tensor using finite differences
+            ibrion = 6  
 
         params = {"ISIF": isif,  ## switch to 3 to relax cell vectors
                   "IBRION": ibrion,  ## CG relaxation; switch to -1 for static calc
@@ -180,6 +185,24 @@ class IncarSettings:
         self.params.update(params)
         
         return
+    
+    
+    def dielectric(self):
+        
+        if "SCAN" in self.func:
+            ## get the macroscopic dielectric tensor using finite field method  
+            params = {"LCALCEPS": True,
+                      "LPEAD": True
+                      }  
+        else:
+            ## get the macroscopic dielectric tensor using DFPT 
+            params = {"LEPSILON": True,
+                      "LPEAD": True
+                      }  
+            
+        self.params.update(params)
+        
+        return
         
         
     def parallel(self,lplane=True,npar=4,kpar=2):
@@ -224,10 +247,10 @@ def main(args):
         
     parser = argparse.ArgumentParser(description='Generate INCAR')
     parser.add_argument('--q',type=int,help='charge (default 0)',default=0)
-    parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands',default='relax')
+    parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands/dielectric',default='relax')
     parser.add_argument('--functional',help='type of function: PBE(default)/SCAN+rVV10',default='PBE')
     parser.add_argument('--soc',help='turn on spin-orbit coupling',default=False,action='store_true')
-    parser.add_argument('--unitcell',help='relax unitcell lattice parameters',default=False,action='store_true')
+    parser.add_argument('--relaxcell',help='relax cell lattice parameters',default=False,action='store_true')
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)
@@ -249,9 +272,11 @@ def main(args):
     if args.soc:
         inc.mag(ncl=True)
         inc.soc()
-    if args.unitcell:
+    if args.relaxcell:
         inc.ionicrelax(isif=3)
         inc.parallel(lplane=True,npar=None,kpar=None)
+    if args.runtype == 'dielectric':
+        inc.dielectric()
     inc.stripNone()      
     
     with open(os.path.join(dir_sub,"INCAR"),'w') as f:
