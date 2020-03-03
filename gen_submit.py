@@ -4,13 +4,14 @@ import json
 import argparse
 
 
-def sbatch_cmds(s,jobname,nodes,mem,time,qos):      
+def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):      
     
     s += '#SBATCH --job-name=%s\n'%jobname
     s += '#SBATCH -o out_%j\n'
-    s += '#SBATCH -e err_%j\n' 
-    s += '#SBATCH --mail-type=END,FAIL  # Mail events (NONE, BEGIN, END, FAIL, ALL)\n'
-    s += '#SBATCH --mail-user=annemarietan@ufl.edu\n'
+    s += '#SBATCH -e err_%j\n'
+    if email is not None:
+        s += '#SBATCH --mail-type=END,FAIL  # Mail events (NONE, BEGIN, END, FAIL, ALL)\n'
+        s += '#SBATCH --mail-user=%s\n'%email
     s += '#SBATCH --partition=hpg2-compute\n'
     s += '#SBATCH --qos=%s\n'%qos
     s += '#SBATCH --ntasks=%d\n'%(nodes*32)
@@ -62,6 +63,7 @@ def main(args):
     parser.add_argument('--mem',type=int,help='memory per node',default=2048)
     parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
     parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
+    parser.add_argument('--email',help='user email',default=None)
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)
@@ -83,7 +85,7 @@ def main(args):
     print (jobname)
     
     s = '#!/bin/bash\n'
-    s = sbatch_cmds(s,jobname,args.nodes,args.mem,args.time,args.queue)
+    s = sbatch_cmds(s,jobname,args.nodes,args.mem,args.time,args.queue,args.email)
     s += 'cd $SLURM_SUBMIT_DIR\n\n'
     s = load_modules(s,args.vasp)
     s += 'echo \'Done.\''
