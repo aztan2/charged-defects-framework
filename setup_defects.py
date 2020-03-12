@@ -2,23 +2,7 @@ import os
 import shutil
 import sys
 import argparse
-import gen_defect_supercells, gen_incar, gen_kpts_grid, gen_submit
-
-
-def check_file_exists(directory,filename):
-    
-    ## check if a file is present in a given directory
-    
-    files = [f for f in os.listdir(directory) 
-                if f.startswith(filename)]
-    if len(files) < 1:
-        raise RuntimeError ("can't find %s file!"%filename)
-        sys.exit(1)
-    elif len(files) > 1:
-        raise RuntimeError ("more than 1 %s file found"%filename)
-        sys.exit(1)
-    else:
-        return True
+import myutils, gen_defect_supercells, gen_incar, gen_kpts_grid, gen_submit
 
 
 def main(args):
@@ -48,17 +32,17 @@ def main(args):
     
     ## check if initdef file is present in dir_main ?
     if not args.write_bulkref:
-        if check_file_exists(args.dir_main,"initdef") == True:
+        if myutils.check_file_exists(args.dir_main,"initdef") == True:
             for file in os.listdir(args.dir_main): 
                 if file.startswith("initdef"):
                     file_initdef = file
         
     ## check if POTCAR is present in dir_main ?
-    check_file_exists(args.dir_main,"POTCAR")  
+    myutils.check_file_exists(args.dir_main,"POTCAR")  
 
     ## check if relevant POSCARs are present in dir_main ?
     for vac in args.vacs:
-        check_file_exists(args.dir_main,"POSCAR_vac_%d"%vac)        
+        myutils.check_file_exists(args.dir_main,"POSCAR_vac_%d"%vac)        
     
     
     for q in args.qs:
@@ -119,9 +103,9 @@ if __name__ == '__main__':
 #    cmd = 'C:/Users/Anne/Desktop/UF/research/charged_defects/testing/bulkref/GGA/mag/ \
 #            --q 0 --cell 3x3x1 4x4x1 --vac 15 20 --write_bulkref'
     
-    cmd = 'C:/Users/Anne/Desktop/UF/research/charged_defects/testing/Sevac_/GGA/mag/ \
-            --q 0 -1 1 --cell 3x3x1 4x4x1 --vac 15 20'
-            
-    main(cmd.split())
+#    cmd = 'C:/Users/Anne/Desktop/UF/research/charged_defects/testing/Sevac_/GGA/mag/ \
+#            --q 0 -1 1 --cell 3x3x1 4x4x1 --vac 15 20'
+#            
+#    main(cmd.split())
     
-#    main(sys.argv[1:])
+    main(sys.argv[1:])
