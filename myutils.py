@@ -1,5 +1,5 @@
 import os
-import sys
+import logging
 
 
 def listdironly(path):
@@ -21,11 +21,26 @@ def check_file_exists(directory,filename):
                 if f.startswith(filename)]
     if len(files) < 1:
         print ("can't find %s file!"%filename)
-#        sys.exit(1)
         return False
     elif len(files) > 1:
         print ("more than 1 %s file found"%filename)
-#        sys.exit(1)
         return False
     else:
         return True
+    
+    
+def setup_logging(logfile=None):
+    
+    if logfile:
+        logging.basicConfig(filename=logfile,filemode='w',
+                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logging.getLogger().addHandler(console)
+    else:
+        logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
+        
+    return logging
+        
+        

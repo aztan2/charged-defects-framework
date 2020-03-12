@@ -1,6 +1,5 @@
 import os
 import argparse
-import logging
 import numpy as np
 import pandas as pd
 import myutils
@@ -20,15 +19,10 @@ if __name__ == '__main__':
     
     ## set up logging
     if args.logfile:
-        logging.basicConfig(filename=args.logfile,filemode='w',
-                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
-        console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
-        logging.getLogger('').addHandler(console)
+        myLogger = myutils.setup_logging(args.logfile)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
-
+        myLogger = myutils.setup_myLogger()
+        
 
     ## load list of dataframes from sheets from excel file    
     df = pd.read_excel(myutils.joinpath(args.path,args.xlfile),sheet_name=None)
@@ -40,19 +34,19 @@ if __name__ == '__main__':
     for q in myutils.listdironly(myutils.joinpath(args.path,'')):
         for cell in myutils.listdironly(myutils.joinpath(args.path,q,'')): 
             for vac in myutils.listdironly(myutils.joinpath(args.path,q,cell,'')): 
-                logging.info("parsing %s %s %s"%(q,cell,vac))
+                myLogger.info("parsing %s %s %s"%(q,cell,vac))
                 
                 folder = myutils.joinpath(args.path,q,cell,vac,'')
                 
                 if args.soc: 
-                    logging.info("parsing dos subdirectory")
+                    myLogger.info("parsing dos subdirectory")
                     folder = myutils.joinpath(folder,'dos','')     
                 if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
                     folder = myutils.joinpath(folder,'restart','')
-                    logging.info("parsing restart subdirectory")
+                    myLogger.info("parsing restart subdirectory")
 
                 if not os.path.exists(myutils.joinpath(folder,'correction','correction')):
-                    logging.warning("correction file does not exist")
+                    myLogger.warning("correction file does not exist")
                 else:
                     with open(myutils.joinpath(folder,'correction','correction')) as f:
                         lines = f.readlines()
@@ -66,9 +60,9 @@ if __name__ == '__main__':
 #    for cell in listdironly(joinpath(args.path,'')):
 #        for vac in listdironly(joinpath(args.path,cell,'')): 
 #            for q in listdironly(joinpath(args.path,cell,vac,'')): 
-#                logging.info("parsing %s %s %s"%(cell,vac,q))
+#                myLogger.info("parsing %s %s %s"%(cell,vac,q))
 #                if not os.path.exists(joinpath(args.path,cell,vac,q,'correction')):
-#                    logging.warning("correction file does not exist")
+#                    myLogger.warning("correction file does not exist")
 #                else:
 #                    with open(joinpath(args.path,cell,vac,q,'correction')) as f:
 #                        lines = f.readlines()

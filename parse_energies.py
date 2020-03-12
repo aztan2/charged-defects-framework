@@ -1,7 +1,6 @@
 import os
-import argparse
-import logging
 import time
+import argparse
 import numpy as np
 import pandas as pd
 from pymatgen.io.vasp.inputs import Poscar
@@ -24,14 +23,10 @@ if __name__ == '__main__':
     
     ## set up logging
     if args.logfile:
-        logging.basicConfig(filename=args.logfile,filemode='w',
-                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
-        console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
-        logging.getLogger('').addHandler(console)
+        myLogger = myutils.setup_logging(args.logfile)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
+        myLogger = myutils.setup_myLogger()
+        
 
     qs = myutils.listdironly(args.path)
     
@@ -41,7 +36,7 @@ if __name__ == '__main__':
 
     ## set up dataframe for neutral defect first
     if 'charge_0' not in qs:
-        logging.warning("can't find output files for neutral defect")
+        myLogger.warning("can't find output files for neutral defect")
     else:
         df0 = pd.DataFrame(columns = ['vacuum',
                                       'supercell',
@@ -52,27 +47,28 @@ if __name__ == '__main__':
     
         for cell in myutils.listdironly(myutils.joinpath(args.path,'charge_0','')):
             for vac in myutils.listdironly(myutils.joinpath(args.path,'charge_0',cell,'')):   
-                logging.info("parsing neutral %s %s"%(cell,vac))
+                myLogger.info("parsing neutral %s %s"%(cell,vac))
 
                 folder = myutils.joinpath(args.path,'charge_0',cell,vac,'')
-                folder_ref = myutils.joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+#                folder_ref = myutils.joinpath(args.path_ref,'charge_0',cell,vac,'bulkref','')
+                folder_ref = myutils.joinpath(args.path_ref,'charge_0',cell,vac,'')
 
                 if args.soc:  
                     folder = myutils.joinpath(folder,'dos','')
                     folder_ref = myutils.joinpath(folder_ref,'dos','')
-                    logging.info("parsing dos subdirectory")
+                    myLogger.info("parsing dos subdirectory")
                 if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
                     folder = myutils.joinpath(folder,'restart','')
-                    logging.info("parsing restart subdirectory")
+                    myLogger.info("parsing restart subdirectory")
                                         
                 vr_file = myutils.joinpath(folder,'vasprun.xml')
                 vr_ref_file = myutils.joinpath(folder_ref,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
-                    logging.warning("%s file does not exist"%vr_file)
+                    myLogger.warning("%s file does not exist"%vr_file)
                     
                 elif not os.path.exists(vr_ref_file):
-                    logging.warning("%s file does not exist"%vr_ref_file)
+                    myLogger.warning("%s file does not exist"%vr_ref_file)
                     
                 else:
                     natoms = np.sum(Poscar.from_file(myutils.joinpath(folder_ref,'POSCAR')).natoms)
@@ -80,11 +76,8 @@ if __name__ == '__main__':
                     vr_ref = Vasprun(vr_ref_file)
                     
                     if not vr.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"
+                        myLogger.warning("Vasp calculation in %s may not be converged"
                                         %folder)                    
-                    if not vr_ref.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"
-                                        %(myutils.joinpath(folder,'bulkref','')))
                     
                     df0.loc[len(df0)] = [vac,
                                          cell,
@@ -92,7 +85,7 @@ if __name__ == '__main__':
                                          1/natoms,
                                          vr.final_energy,
                                          vr_ref.final_energy]
-                    ## add the parsing of chem pot, vbm
+                    
                     
         df0.sort_values(['vacuum','N'],inplace=True)
         df0.to_excel(writer,'charge_0')
@@ -104,26 +97,26 @@ if __name__ == '__main__':
         
         for cell in myutils.listdironly(myutils.joinpath(args.path,q,'')):
             for vac in myutils.listdironly(myutils.joinpath(args.path,q,cell,'')):
-                logging.info("parsing %s %s %s"%(q,cell,vac))
+                myLogger.info("parsing %s %s %s"%(q,cell,vac))
 
                 folder = myutils.joinpath(args.path,q,cell,vac,'')
 
                 if args.soc:  
                     folder = myutils.joinpath(folder,'dos','')
-                    logging.info("parsing dos subdirectory")
+                    myLogger.info("parsing dos subdirectory")
                 if os.path.exists(folder) and 'restart' in myutils.listdironly(folder):
                     folder = myutils.joinpath(folder,'restart','')
-                    logging.info("parsing restart subdirectory")
+                    myLogger.info("parsing restart subdirectory")
                     
                 vr_file = myutils.joinpath(folder,'vasprun.xml')
                 
                 if not os.path.exists(vr_file):
-                    logging.warning("%s file does not exist"%vr_file)
+                    myLogger.warning("%s file does not exist"%vr_file)
                     
                 else:
                     vr = Vasprun(vr_file)                    
                     if not vr.converged:
-                        logging.warning("Vasp calculation in %s may not be converged"
+                        myLogger.warning("Vasp calculation in %s may not be converged"
                                         %folder)                       
                     df.loc[(df['vacuum'] == vac) & 
                            (df['supercell'] == cell),'E_def'] = vr.final_energy
@@ -132,7 +125,5 @@ if __name__ == '__main__':
 
     writer.save()
     
-    logging.debug("Total time taken (s): %.2f"%(time.time()-time0))
-            
-    
-    
+    myLogger.debug("Total time taken (s): %.2f"%(time.time()-time0))
+             
