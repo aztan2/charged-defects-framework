@@ -25,7 +25,7 @@ if __name__ == '__main__':
     if args.logfile:
         myLogger = myutils.setup_logging(args.logfile)
     else:
-        myLogger = myutils.setup_myLogger()
+        myLogger = myutils.setup_logging()
         
 
     qs = myutils.listdironly(args.path)

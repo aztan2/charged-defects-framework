@@ -21,7 +21,7 @@ if __name__ == '__main__':
     if args.logfile:
         myLogger = myutils.setup_logging(args.logfile)
     else:
-        myLogger = myutils.setup_myLogger()
+        myLogger = myutils.setup_logging()
         
 
     ## load list of dataframes from sheets from excel file    
