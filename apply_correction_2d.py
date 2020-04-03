@@ -21,6 +21,7 @@ def main(args):
                         (supply this or --eps_slab and --d_slab)')
     parser.add_argument('--functional',  default='PBE',
                         help='functional that was used for this set of calculations')
+    parser.add_argument('--encut', type=int, default=520, help='cutoff energy (eV)')
     parser.add_argument('--soc', default=False,action='store_true',
                         help='whether or not to look in soc(dos) subdirectory')
     parser.add_argument('--logfile', help='logfile to save output to')
@@ -33,7 +34,7 @@ def main(args):
     if args.logfile:
         myLogger = myutils.setup_logging(args.logfile)
     else:
-        myLogger = myutils.setup_myLogger()
+        myLogger = myutils.setup_logging()
 
     
     ## if eps_slab and d_slab are directly provided
@@ -94,7 +95,8 @@ def main(args):
                         ##        [--vfile VFILE] [--noplot] [--logfile LOGFILE]
                         get_alignment_correction_2d.main([myutils.joinpath(folder_ref,'LOCPOT'),
                                                           myutils.joinpath(folder,'LOCPOT'),
-                                                          str(520), q.split('_')[-1],
+                                                          str(args.encut), q.split('_')[-1],
+#                                                          '--allplots', 
                                                           '--logfile', 'getalign.log'])
     
                     elif not os.path.exists(myutils.joinpath(folder,'LOCPOT')):

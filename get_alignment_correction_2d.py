@@ -22,7 +22,8 @@ def main(args):
     parser.add_argument('--threshold_C',type=float,default=1e-3,
                         help='threshold for determining if potential is aligned')
     parser.add_argument('--vfile',help='vline .dat file',default='vline-eV.dat')
-    parser.add_argument('--noplot',help='do not generate plots',default=False,action='store_true')
+    parser.add_argument('--noplots',help='do not generate plots',default=False,action='store_true')
+    parser.add_argument('--allplots',help='save all plots',default=False,action='store_true')
     parser.add_argument('--logfile',help='logfile to save output to')
        
     ## read in the above arguments from command line
@@ -64,7 +65,7 @@ def main(args):
         data = np.loadtxt(args.vfile)
         
         ## plot potential profiles
-        if not args.noplot:
+        if not args.noplots:
             plt.figure()
             plt.plot(data[:,0],data[:,2],'r',label=r'$V_{def}-V_{bulk}$')
             plt.plot(data[:,0],data[:,1],'g',label=r'$V_{model}$')
@@ -73,7 +74,10 @@ def main(args):
             plt.ylabel("potential (eV)")
             plt.xlim(data[0,0],data[-1,0])
             plt.legend() 
-            plt.savefig(os.getcwd()+'/alignment.png')
+            if args.allplots:
+                plt.savefig(os.getcwd()+'/alignment_%d.png'%counter)
+            else:
+                plt.savefig(os.getcwd()+'/alignment.png')
         
         ## assumes that the slab is in the center of the cell vertically!
         ## select datapoints corresponding to 2 bohrs at the top and bottom
