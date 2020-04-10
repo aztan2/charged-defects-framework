@@ -75,7 +75,7 @@ def main(args):
                 
                 ## check if defectproperty.json file is present in current directory
                 if not os.path.exists(myutils.joinpath(folder,'defectproperty.json')):
-                    myLogger.warning("defectproperty.json file does not exist; I can't proceed!")
+                    myLogger.warning("defectproperty.json file does not exist in %s; I can't proceed!"%folder)
                     
                 else:
                     os.chdir(folder)

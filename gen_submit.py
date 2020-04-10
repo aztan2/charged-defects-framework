@@ -4,7 +4,7 @@ import json
 import argparse
 
 
-def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):      
+def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):
     
     s += '#SBATCH --job-name=%s\n'%jobname
     s += '#SBATCH -o out_%j\n'
@@ -33,19 +33,27 @@ def load_modules(s,vasp="noz"):
         s += 'module load intel/2019.1.144\n'
         s += 'module load openmpi/4.0.1\n'
         s += 'srun --mpi=pmix_v3 /home/annemarietan/vasp5.4.4_intel2019/vasp_noz > job.log\n\n'
+    elif vasp == "ncl_intel2019":
+        s += 'module load intel/2019.1.144\n'
+        s += 'module load openmpi/4.0.1\n'
+        s += 'srun --mpi=pmix_v3 /home/annemarietan/vasp5.4.4_intel2019/vasp_ncl > job.log\n\n'
     elif vasp == "noz":
         s += 'module load intel/2018\n'
         s += 'module load openmpi/3.1.0\n'
-        s += 'srun --mpi=pmix_v1 /home/annemarietan/vasp_noz > job.log\n\n'
+        s += 'srun --mpi=pmix_v1 /home/annemarietan/vasp5.4.4_intel2018/vasp_noz > job.log\n\n'
     elif vasp == "ncl_noz":
         s += 'module load intel/2018\n'
         s += 'module load openmpi/3.1.0\n'
-        s += 'srun --mpi=pmix_v1 /home/annemarietan/vasp_ncl_noz > job.log\n\n'
+        s += 'srun --mpi=pmix_v1 /home/annemarietan/vasp5.4.4_intel2018/vasp_ncl_noz > job.log\n\n'
     elif vasp == "std":
-        s += 'module load intel/2018\n'
-        s += 'module load openmpi/3.0.0\n'
+        s += 'module load intel/2019.1.144\n'
+        s += 'module load openmpi/4.0.0\n'
         s += 'module load vasp/5.4.4\n'
-        s += 'srun --mpi=pmix_v1 vasp_std > job.log\n\n'
+        s += 'srun --mpi=pmix_v3 vasp_std > job.log\n\n'
+#        s += 'module load intel/2018\n'
+#        s += 'module load openmpi/3.0.0\n'
+#        s += 'module load vasp/5.4.4\n'
+#        s += 'srun --mpi=pmix_v1 vasp_std > job.log\n\n'
     else:
         raise ValueError ("unrecognized vasp version!")
     
@@ -62,8 +70,8 @@ def main(args):
     parser.add_argument('--nodes',type=int,help='number of nodes',default=1)
     parser.add_argument('--mem',type=int,help='memory per node',default=2048)
     parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
-    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz')
-    parser.add_argument('--email',help='user email',default=None)
+    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz_intel2019')
+    parser.add_argument('--email',help='user email',default='annemarietan@ufl.edu')
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)

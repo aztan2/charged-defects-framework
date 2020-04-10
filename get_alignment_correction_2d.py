@@ -21,6 +21,8 @@ def main(args):
                         help='threshold for determining if potential is flat')
     parser.add_argument('--threshold_C',type=float,default=1e-3,
                         help='threshold for determining if potential is aligned')
+    parser.add_argument('--max_iter',type=int,default=20,
+                        help='max. no. of shifts to try')
     parser.add_argument('--vfile',help='vline .dat file',default='vline-eV.dat')
     parser.add_argument('--noplots',help='do not generate plots',default=False,action='store_true')
     parser.add_argument('--allplots',help='save all plots',default=False,action='store_true')
@@ -54,7 +56,7 @@ def main(args):
 
 
     time0 = time.time()
-    while not done and counter < 20:
+    while not done and counter < args.max_iter:
         counter += 1
         ## run sxdefectalign2d with --shift <shift>
         command1 = command + ['--shift', str(shift), '--onlyProfile']
@@ -132,7 +134,7 @@ def main(args):
                               '> correction']
         os.system(' '.join(command2))
     else:
-        myLogger.info("Could not find optimal shift after 20 tries :(")
+        myLogger.info("Could not find optimal shift after %d tries :("%args.max_iter)
     
     myLogger.debug("Total time taken (s): %.2f"%(time.time()-time0))
     
