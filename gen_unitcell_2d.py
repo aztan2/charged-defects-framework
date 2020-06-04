@@ -194,9 +194,10 @@ def layer_from_bulk(struct_bulk,slabmin,slabmax):
     return struct_layer
 
     
-if __name__ == '__main__':
+def main(args):
     
-     
+    ## define a main function callable from another python script
+    
     parser = argparse.ArgumentParser(description='Generate 2D unitcell.')
     parser.add_argument('path_poscar',help='path to unitcell POSCAR')
     parser.add_argument('vacuum',type=int,help='vacuum spacing')
@@ -209,7 +210,7 @@ if __name__ == '__main__':
                         help='fractional coord of the top of the layer to isolate')
       
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
 
     ## get current working directory
@@ -235,3 +236,8 @@ if __name__ == '__main__':
         os.makedirs(dir_sub)
     Poscar.write_file(Poscar(struct),os.path.join(dir_sub,"POSCAR"))
 
+    
+if __name__ == '__main__':
+    
+    main(sys.argv[1:])
+    

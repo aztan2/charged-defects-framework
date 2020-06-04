@@ -8,9 +8,10 @@ from pymatgen.io.vasp.outputs import Outcar, Vasprun
 import myutils
 
 
-if __name__ == '__main__':
-
+def main(args):
     
+    ## define a main function callable from another python script
+
     parser = argparse.ArgumentParser(description='Parse total energies from OUTCARs.')
     parser.add_argument('path',help='path to the directory containing all the output files')
     parser.add_argument('path_ref',help='path to the directory containing all the reference output files')
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--logfile',help='logfile to save output to')
        
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
     ## set up logging
     if args.logfile:

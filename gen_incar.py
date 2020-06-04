@@ -217,7 +217,7 @@ class IncarSettings:
         return
     
     
-    def output(self,lwave=True,lcharg=True,lmaxmix=4,lorbit=11,lvtot=True,lvhar=True):
+    def output(self,lwave=False,lcharg=False,lmaxmix=4,lorbit=11,lvtot=True,lvhar=True):
         
         params = {"LWAVE": lwave,  ## write WAVECAR
                   "LCHARG": lcharg,   ## write CHGCAR
@@ -254,7 +254,6 @@ def main(args):
       
     ## read in the above arguments from command line
     args = parser.parse_args(args)
-    
 
     ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
@@ -277,6 +276,9 @@ def main(args):
         inc.parallel(lplane=True,npar=None,kpar=None)
     if args.runtype == 'dielectric':
         inc.dielectric()
+        inc.startup(isym=None)
+        inc.parallel(npar=None,kpar=None)
+        inc.output(lvtot=None,lvhar=None)
     inc.stripNone()      
     
     with open(os.path.join(dir_sub,"INCAR"),'w') as f:
