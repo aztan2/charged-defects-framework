@@ -1,11 +1,12 @@
 import os
+import sys
 import argparse
 import numpy as np
 import pandas as pd
 import myutils
 
 
-if __name__ == '__main__':
+def main(args):
     
     
     parser = argparse.ArgumentParser(description='Parse correction calculated by sxdefectalign2d.')
@@ -14,8 +15,9 @@ if __name__ == '__main__':
     parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory',default=False,action='store_true')
     parser.add_argument('--logfile',help='logfile to save output to')
        
+    
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
     ## set up logging
     if args.logfile:
@@ -55,22 +57,6 @@ if __name__ == '__main__':
                                 E_corr = float(line.split()[-2])
                     df[q].loc[(df[q]['vacuum'] == vac) & 
                               (df[q]['supercell'] == cell),'E_corr'] = E_corr
-    
-
-#    for cell in listdironly(joinpath(args.path,'')):
-#        for vac in listdironly(joinpath(args.path,cell,'')): 
-#            for q in listdironly(joinpath(args.path,cell,vac,'')): 
-#                myLogger.info("parsing %s %s %s"%(cell,vac,q))
-#                if not os.path.exists(joinpath(args.path,cell,vac,q,'correction')):
-#                    myLogger.warning("correction file does not exist")
-#                else:
-#                    with open(joinpath(args.path,cell,vac,q,'correction')) as f:
-#                        lines = f.readlines()
-#                        for line in lines:
-#                            if line[:21] == 'iso - periodic energy':
-#                                E_corr = float(line.split()[-2])
-#                    df[q].loc[(df[q]['vacuum'] == vac) & 
-#                              (df[q]['supercell'] == cell),'E_corr'] = E_corr
 
 
     ## write the updated excel file
@@ -79,3 +65,8 @@ if __name__ == '__main__':
         df[q].to_excel(writer, q)
     writer.save()    
        
+
+if __name__ == '__main__':
+    
+    main(sys.argv[1:]) 
+             

@@ -99,13 +99,6 @@ def main(args):
 
 if __name__ == '__main__':
 
-
-#    cmd = 'C:/Users/Anne/Desktop/UF/research/charged_defects/testing/bulkref/GGA/mag/ \
-#            --q 0 --cell 3x3x1 4x4x1 --vac 15 20 --write_bulkref'
-    
-#    cmd = 'C:/Users/Anne/Desktop/UF/research/charged_defects/testing/Sevac_/GGA/mag/ \
-#            --q 0 -1 1 --cell 3x3x1 4x4x1 --vac 15 20'
-#            
-#    main(cmd.split())
     
     main(sys.argv[1:])
+    
