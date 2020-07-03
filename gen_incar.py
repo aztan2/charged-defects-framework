@@ -70,6 +70,13 @@ class IncarSettings:
                 icharg = 10  ## Read charge density from WAVECAR and keep fixed
             elif self.chgcar:
                 icharg = 11  ## Read charge density from CHGCAR and keep fixed
+            else:
+                if self.runtype == "bands":
+                    raise FileNotFoundError('No CHGCAR or WAVECAR provided '\
+                                            'for a bandstructure calculation. '\
+                                            'If you wish to proceed, you will need '\
+                                            'to generate a special KPOINTS file '\
+                                            'with a uniform mesh at the top.')
                 
         nelect = int(np.dot([pc.nelectrons for pc in self.potcar],
                             self.poscar.natoms) - self.charge)
@@ -273,7 +280,8 @@ def main(args):
         inc.soc()
     if args.relaxcell:
         inc.ionicrelax(isif=3)
-        inc.parallel(lplane=True,npar=None,kpar=None)
+        inc.parallel(npar=None,kpar=None)
+        inc.output(lcharg=True)
     if args.runtype == 'dielectric':
         inc.dielectric()
         inc.startup(isym=None)
