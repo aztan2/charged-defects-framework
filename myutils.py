@@ -4,7 +4,8 @@ import logging
 
 def listdironly(path):
     
-    return [d for d in os.listdir(path) if os.path.isdir(path+d) == True]
+    return [d for d in os.listdir(path) 
+            if os.path.isdir(os.path.join(path,d)) == True]
 
 
 def joinpath(path,*paths):
