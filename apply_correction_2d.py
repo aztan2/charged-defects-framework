@@ -11,15 +11,15 @@ def main(args):
     
     parser = argparse.ArgumentParser(description='Apply sxdefectalign2d correction \
                                      to all charged defect calulations.')
-    parser.add_argument('path_def', help='path to main defect directory')
-    parser.add_argument('path_ref', help='path to the undefected reference directory')
+    parser.add_argument('dir_def', help='path to the main defect directory')
+    parser.add_argument('dir_ref', help='path to the pristine reference directory')
     parser.add_argument('--eps_slab', type=float,
-                        help='average slab dielectric constant (supply this or --file_dbentry)')
+                        help='average slab dielectric constant (supply this or --dbentry)')
     parser.add_argument('--d_slab', type=float,
-                        help='slab thickness (supply this or --file_dbentry)')
-    parser.add_argument('--file_dbentry', help='path to the relevant dbentry.json file \
+                        help='slab thickness (supply this or --dbentry)')
+    parser.add_argument('--dbentry', help='path to the relevant database entry .json file \
                         (supply this or --eps_slab and --d_slab)')
-    parser.add_argument('--functional',  default='PBE',
+    parser.add_argument('--functional',  default='GGA',
                         help='functional that was used for this set of calculations')
     parser.add_argument('--encut', type=int, default=520, help='cutoff energy (eV)')
     parser.add_argument('--soc', default=False,action='store_true',
@@ -27,7 +27,7 @@ def main(args):
     parser.add_argument('--logfile', help='logfile to save output to')
        
     ## read in the above arguments from command line
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     
     
     ## set up logging
@@ -43,29 +43,29 @@ def main(args):
         d_slab = args.d_slab
         myLogger.info("eps_slab: %.2f ; d_slab: %.2f"%(eps_slab,d_slab))
 
-    elif args.file_dbentry:
+    elif args.dbentry:
         ## extract the eps_slab and d_slab from the relevant dbentry file
-        if os.path.exists(args.file_dbentry):
-            myLogger.info("Using slab properties from " + args.file_dbentry)
-            with open(args.file_dbentry, 'r') as file:
+        if os.path.exists(args.dbentry):
+            myLogger.info("Using slab properties from " + args.dbentry)
+            with open(args.dbentry, 'r') as file:
                 mater = json.loads(file.read())
-                eps_slab = mater[args.functional]["unitcell"]["eps_ave"]
-                d_slab = mater[args.functional]["unitcell"]["d_slab"]
+                eps_slab = mater[args.functional]["eps_ave"]
+                d_slab = mater[args.functional]["d_slab"]
                 myLogger.info("eps_slab: %.2f ; d_slab: %.2f"%(eps_slab,d_slab))
         else:
             ## if can't find a dbentry file
-            myLogger.info("Cannot find the file " + args.file_dbentry)
+            myLogger.info("Cannot find the file " + args.dbentry)
             
     else:
         myLogger.info("Insufficient information provided about the slab dielectric profile")
 
 
-    qs = myutils.listdironly(args.path_def)
+    qs = myutils.listdironly(args.dir_def)
     for q in [qi for qi in qs if qi != 'charge_0']:      
-        for cell in myutils.listdironly(myutils.joinpath(args.path_def,q,'')):
-            for vac in myutils.listdironly(myutils.joinpath(args.path_def,q,cell,'')):
-                folder = myutils.joinpath(args.path_def,q,cell,vac,'')
-                folder_ref = myutils.joinpath(args.path_ref,'charge_0',cell,vac,'')
+        for cell in myutils.listdironly(myutils.joinpath(args.dir_def,q,'')):
+            for vac in myutils.listdironly(myutils.joinpath(args.dir_def,q,cell,'')):
+                folder = myutils.joinpath(args.dir_def,q,cell,vac,'')
+                folder_ref = myutils.joinpath(args.dir_ref,'charge_0',cell,vac,'')
 
                 if args.soc:  
                     folder = myutils.joinpath(folder,'dos','')
@@ -75,7 +75,7 @@ def main(args):
                 
                 ## check if defectproperty.json file is present in current directory
                 if not os.path.exists(myutils.joinpath(folder,'defectproperty.json')):
-                    myLogger.warning("defectproperty.json file does not exist in %s; I can't proceed!"%folder)
+                    myLogger.warning("defectproperty.json file does not exist; I can't proceed!")
                     
                 else:
                     os.chdir(folder)
@@ -96,7 +96,7 @@ def main(args):
                         get_alignment_correction_2d.main([myutils.joinpath(folder_ref,'LOCPOT'),
                                                           myutils.joinpath(folder,'LOCPOT'),
                                                           str(args.encut), q.split('_')[-1],
-#                                                          '--allplots', 
+                                                          '--allplots', 
                                                           '--logfile', 'getalign.log'])
     
                     elif not os.path.exists(myutils.joinpath(folder,'LOCPOT')):

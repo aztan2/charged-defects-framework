@@ -34,10 +34,9 @@ def main(args):
     
     ## set up logging
     if args.logfile:
-        myLogger = myutils.setup_logging(args.logfile)
+        myLogger = myutils.setup_logging(os.path.join(os.getcwd(),args.logfile))
     else:
         myLogger = myutils.setup_logging()
-    myLogger.getLogger('matplotlib.font_manager').disabled = True
     
     
     ## basic command to run sxdefectalign2d
@@ -59,7 +58,10 @@ def main(args):
     while not done and counter < args.max_iter:
         counter += 1
         ## run sxdefectalign2d with --shift <shift>
-        command1 = command + ['--shift', str(shift), '--onlyProfile']
+        if args.logfile:
+            command1 = command + ['--shift', str(shift), '--onlyProfile', '>> %s'%args.logfile]
+        else:
+            command1 = command + ['--shift', str(shift), '--onlyProfile']
         os.system(' '.join(command1))
         
         ## read in the potential profiles from vline-eV.dat
@@ -80,6 +82,7 @@ def main(args):
                 plt.savefig(os.getcwd()+'/alignment_%d.png'%counter)
             else:
                 plt.savefig(os.getcwd()+'/alignment.png')
+            plt.close()
         
         ## assumes that the slab is in the center of the cell vertically!
         ## select datapoints corresponding to 2 bohrs at the top and bottom

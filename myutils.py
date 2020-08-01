@@ -31,17 +31,25 @@ def check_file_exists(directory,filename):
     
     
 def setup_logging(logfile=None):
+
+    logger = logging.getLogger()
+    if logger.hasHandlers(): 
+        logger.handlers = []
+    logging.getLogger('matplotlib.font_manager').disabled = True
     
     if logfile:
-        logging.basicConfig(filename=logfile,filemode='w',
-                            format='%(levelname)s:%(message)s',level=logging.DEBUG)    
+        file = logging.FileHandler(logfile)
+        file.setLevel(logging.DEBUG)
+        file.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
+        logger.addHandler(file) 
+        
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
         console.setFormatter(logging.Formatter('%(levelname)s:%(message)s'))
-        logging.getLogger().addHandler(console)
+        logger.addHandler(console)
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.DEBUG)
         
-    return logging
+    return logger
         
         
