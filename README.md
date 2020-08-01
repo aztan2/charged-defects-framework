@@ -6,10 +6,9 @@ This repository contains a collection of python and bash scripts for setting up 
 
 This is currently a work in progress by Anne Marie Tan. 
 
-## Python scripts: 
-
 Note: These python scripts make use of the following python packages: `numpy`, `pymatgen`, `pandas` (+ `openpyxl`), `matplotlib` which need to be installed beforehand.
 
+## Pre-processing scripts:
 * `setup_defects.py`: creates new sub-directories in the `charge/supercell/vacuum` pattern for a given defect, and runs `gen_defect_supercells.py`, `gen_incar.py`, `gen_kpts_grid.py`, and `gen_submit.py` to generate all the required input files for a VASP calculation. This script assumes that the parent directory from which this is run contains the appropriate unitcell `POSCAR_vac_<>` and `POTCAR` files.
 * `gen_unitcell_2D.py`: generates a unitcell `POSCAR` containing a monolayer surrounded by user-specified amount of vacuum. A starting `POSCAR` containing either the monolayer with an arbitrary amount of vacuum, or the layered bulk equivalent structure, must be provided (e.g. obtained from MaterialsProject or MaterialsWeb).
 * `gen_defect_supercells.py`: generates a defect supercell given user-specified defect type (vacancy/substitutional/interstitial/adatom), supercell size and vacuum spacing and writes out the `POSCAR` and `defectproperty.json` files. The defect type, site, and species must be specified in a separate `initdefect.json` input file.
@@ -18,6 +17,7 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 * `gen_kpts_line.py`: generates a linemode `KPOINTS` file for bandstructure calculations. Option to generate special KPOINTS required for SCAN/HSE bandstructure calculations.
 * `gen_submit.py`: generates a SLURM submison script for submitting jobs on HiPerGator. User can specify the queue, nodes, memory, time limit to be requested.
 
+## Post-processing scripts:
 * `apply_correction_2d.py`: goes through every defect sub-directory and applies `gen_SPHInX_input_file.py` and `get_alignment_correction_2d.py` to generate all the required correction files.
 * `gen_SPHInX_input_file.py`: generates the input file required for the [Freysoldt 2D charge correction scheme](https://doi.org/10.1103/PhysRevB.97.205425).
 * `get_alignment_correction_2d.py`: performs the potential alignment procedure by iteratively applying the [sxdefectalign2d script](https://sxrepo.mpie.de/projects/sphinx-add-ons/files) until the optimal charge position and correction energy are obtained.
@@ -26,15 +26,17 @@ Note: These python scripts make use of the following python packages: `numpy`, `
 * `parse_energies.py`: parses the total energies from VASP `vasprun.xml` files, stores in a pandas dataframe, and writes out to an excel file.
 * `parse_corrections.py`: parses the correction energies computed by sxdefectalign2d, adds to the pandas dataframe, and writes out to an excel file.
 
+* `calc_Eform_uncorr.py`: evaluates the uncorrected defect formation energy, stores in a pandas dataframe, and writes out to an excel file. Assumes the existence of a database containing the relevant chemical potential(s) and VBM(s).
+* `calc_Eform_corr.py`: evaluates the corrected defect formation energy, stores in a pandas dataframe, and writes out to an excel file.
+
 More information about each python script, including the required and optional arguments, can be displayed by using the flag `--h`.
 
+## Jupyter tutorials:
 
-## Bash scripts: 
+These jupyter notebooks demonstrate how to make use of the above scripts to set up, execute, and analyze the results of DFT calculations to obtain various properties of 2D materials. They are meant to be executed on HiPerGator, where pre-calculated examples can also be found. 
 
-* `setup_defects.sh`: essentially the legacy bash script version of `setup_defects.py`
-* `apply_correction_loop.sh`: essentially the legacy bash script version of `apply_correction_2d.py`
-* `restart_SCAN.sh`: creates new sub-directories in the charge/supercell/vacuum pattern and prepares the input files to run VASP calculations with SCAN+rVV10 functional, starting from PBE-relaxed `CONTCAR` (and `WAVECAR` if available).
-* `restart_soc.sh`: creates new sub-directories and prepares the input files to run a single-point density of states VASP calculation with spin-orbit coupling, starting from the appropriate relaxed `CONTCAR`.
+* `tutorial_2D_pristine.ipynb`: general tutorial about how to calculate some basic properties (lattice constant, band structure, dielectric tensor) of pristine 2D materials.
+* `tutorial_2D_defects.ipynb`: tutorial about how to correctly evaluate the formation energies of charged defects in 2D materials.
 
 
 ## Authors:
