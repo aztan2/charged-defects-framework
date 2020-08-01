@@ -8,6 +8,7 @@ import myutils
 
 def main(args):
     
+    ## define a main function callable from another python script
     
     parser = argparse.ArgumentParser(description='Parse correction calculated by sxdefectalign2d.')
     parser.add_argument('path',help='path to the directory containing the correction files')
@@ -15,7 +16,6 @@ def main(args):
     parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory',default=False,action='store_true')
     parser.add_argument('--logfile',help='logfile to save output to')
        
-    
     ## read in the above arguments from command line
     args = parser.parse_args(args)
     
@@ -62,11 +62,10 @@ def main(args):
     ## write the updated excel file
     writer = pd.ExcelWriter(myutils.joinpath(args.path,args.xlfile))
     for q in df.keys():  
-        df[q].to_excel(writer, q)
+        df[q].to_excel(writer, q, index=False)
     writer.save()    
        
-
+    
 if __name__ == '__main__':
     
     main(sys.argv[1:]) 
-             

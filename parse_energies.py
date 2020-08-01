@@ -91,7 +91,7 @@ def main(args):
                     
                     
         df0.sort_values(['vacuum','N'],inplace=True)
-        df0.to_excel(writer,'charge_0')
+        df0.to_excel(writer,'charge_0', index=False)
     
 
     ## modify dataframe for charged defects
@@ -124,7 +124,7 @@ def main(args):
                     df.loc[(df['vacuum'] == vac) & 
                            (df['supercell'] == cell),'E_def'] = vr.final_energy
         
-        df.to_excel(writer, q)
+        df.to_excel(writer, q, index=False)
 
     writer.save()
     
