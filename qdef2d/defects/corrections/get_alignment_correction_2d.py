@@ -2,10 +2,10 @@ import os
 import sys
 import time
 import argparse
-import myutils
 import numpy as np
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
+from qdef2d import myutils
 
 
 def main(args):

@@ -1,6 +1,4 @@
-import sys
 import os
-import argparse
 import numpy as np
 import warnings
 with warnings.catch_warnings():
@@ -248,41 +246,38 @@ class IncarSettings:
         return
     
     
-def main(args):
-    
-    ## define a main function callable from another python script
-        
-    parser = argparse.ArgumentParser(description='Generate INCAR')
-    parser.add_argument('--q',type=int,help='charge (default 0)',default=0)
-    parser.add_argument('--runtype',help='type of calculation: relax(default)/dos/bands/dielectric',default='relax')
-    parser.add_argument('--functional',help='type of function: PBE(default)/SCAN+rVV10',default='PBE')
-    parser.add_argument('--soc',help='turn on spin-orbit coupling',default=False,action='store_true')
-    parser.add_argument('--relaxcell',help='relax cell lattice parameters',default=False,action='store_true')
-      
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
+def gen_incar(q=0,runtype='relax',functional='PBE',soc=False,relaxcell=False):
 
-    ## the bash script already put us in the appropriate subdirectory
+    """ 
+    Generate INCAR file.
+    
+    Parameters
+    ----------
+    [optional] q (int): net charge of system. Default=0.
+    [optional] runtype (str): type of calculation: relax(default)/dos/bands/dielectric
+    [optional] functional (str): type of functional: PBE(default)/SCAN+rVV10
+    [optional] soc (bool): to include spin-orbit coupling? Default=False.
+    [optional] relaxcell (bool): to relax cell lattice parameters? Default=Fase.
+    
+    """
+    
     dir_sub = os.getcwd()
-                
-#    if args.runtype == "dos":
-#        dir_sub = dir_sub+"dos/"
     
     poscar = Poscar.from_file(os.path.join(dir_sub,"POSCAR"))
     potcar = Potcar.from_file(os.path.join(dir_sub,"POTCAR"))
     wavecar = os.path.exists(os.path.join(dir_sub,"WAVECAR"))  ## just a boolean (does file exist)
     chgcar = os.path.exists(os.path.join(dir_sub,"CHGCAR"))  ## just a boolean (does file exist)
 
-    inc = IncarSettings(args.functional.split("+"),args.runtype,args.q,poscar,potcar,wavecar,chgcar)
+    inc = IncarSettings(functional.split("+"),runtype,int(q),poscar,potcar,wavecar,chgcar)
     inc.setparams()
-    if args.soc:
+    if soc:
         inc.mag(ncl=True)
         inc.soc()
-    if args.relaxcell:
+    if relaxcell:
         inc.ionicrelax(isif=3)
         inc.parallel(npar=None,kpar=None)
         inc.output(lcharg=True)
-    if args.runtype == 'dielectric':
+    if runtype == 'dielectric':
         inc.dielectric()
         inc.startup(isym=None)
         inc.parallel(npar=None,kpar=None)
@@ -291,9 +286,4 @@ def main(args):
     
     with open(os.path.join(dir_sub,"INCAR"),'w') as f:
         f.write(Incar.get_string(inc.params,sort_keys=False))
-
-
-if __name__ == '__main__':
-    
-    main(sys.argv[1:]) 
    

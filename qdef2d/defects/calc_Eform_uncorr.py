@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 import pandas as pd
-import myutils
+from qdef2d import myutils
 
     
 def get_i_ni(defect):

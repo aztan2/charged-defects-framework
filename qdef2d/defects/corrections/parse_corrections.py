@@ -3,7 +3,7 @@ import sys
 import argparse
 import numpy as np
 import pandas as pd
-import myutils
+from qdef2d import myutils
 
 
 def main(args):

@@ -1,6 +1,5 @@
-import sys
 import os
-import argparse
+import math
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -110,38 +109,82 @@ def get_kpts_line_explicit(kpts_line, ndiv):
         abs_path.append([str(k) for k in end_kpt[:3]] + ['0', end_kpt[-1]])            
 
     return abs_path
-            
 
-def main(args):
+
+def automatic_density_2d(structure, kppa, force_gamma=False):
     
     """
-    Uses pymatgen symmetry functions to determine the high-symmetry k-path.
-    If 2D structure specified, removes k-points with non-zero z-component.
+    Determines the dimensions of a uniform KPOINTS mesh
+    corresponding to a given kpt density per reciprocal atom
+
+    Parameters
+    ----------
+    structure (pymatgen Structure): structure for determining kpoints
+    kppa: kpoint density per reciprocal atom 
+
+    Returns
+    -------
+    Kpoint object containing the uniform grid
+        
+    """    
+
+    comment = "automatically generated KPOINTS with 2d grid density = " + \
+        "%.0f per reciprocal atom" % kppa
+#    if math.fabs((math.floor(kppa ** (1 / 3) + 0.5)) ** 3 - kppa) < 1:
+    if math.fabs((math.floor(kppa ** (1 / 2) + 0.5)) ** 2 - kppa) < 1:
+        kppa += kppa * 0.01
+    latt = structure.lattice
+    lengths = latt.abc
+    ngrid = kppa / structure.num_sites
+#    mult = (ngrid * lengths[0] * lengths[1] * lengths[2]) ** (1 / 3)
+    mult = (ngrid * lengths[0] * lengths[1]) ** (1 / 2)
+
+    num_div = [int(math.floor(max(mult / l, 1))) for l in lengths]
+    num_div[2] = 1  ## force only 1 kpt in c direction
+
+    is_hexagonal = latt.is_hexagonal()
+
+    has_odd = any([i % 2 == 1 for i in num_div])
+    if has_odd or is_hexagonal or force_gamma:
+        style = Kpoints.supported_modes.Gamma
+    else:
+        style = Kpoints.supported_modes.Monkhorst
+
+    return Kpoints(comment, 0, style, [num_div], [0, 0, 0])
+
+
+def gen_kpts_uniform(kppa=400):
+    
+    """ 
+    Generate uniform mesh KPOINTS.
     
     Parameters
     ----------
-    structure (Structure): structure for determining k-path
-    ndiv (int): number of divisions along high-symmetry lines
-    dim (int): 2 for a 2D material, 3 for a 3D material.
-    
-    Returns
-    -------
-    kpts_line : Kpoint object
-        
+    [optional] kppa (int): kpoint density per reciprocal atom. Default=400 pra.
+       
     """
-   
-    parser = argparse.ArgumentParser(description='Generate linemode KPOINTS')
-    parser.add_argument('--ndiv',type=int,default=20,
-                        help='number of divisions along high-symmetry lines')
-    parser.add_argument('--dim',type=int,default=2,
-                        help='dimensionality of structure')
-    parser.add_argument('--for_scan_hse',default=False,action='store_true',
-                        help='generate special KPOINTS for SCAN/HSE?')
-      
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
+
+    dir_sub = os.getcwd()
     
-    ## the bash script already put us in the appropriate subdirectory
+    poscar = Poscar.from_file(os.path.join(dir_sub,"POSCAR"))
+    kpts = automatic_density_2d(poscar.structure, int(kppa), force_gamma=False) 
+    
+    Kpoints.write_file(kpts, os.path.join(dir_sub,"KPOINTS"))
+    
+
+def gen_kpts_line(ndiv=20,dim=2,for_scan_hse=False):
+   
+    """ 
+    Generate linemode KPOINTS.
+    
+    Parameters
+    ----------
+    [optional] ndiv (int): number of divisions along high-symmetry lines. Default=20.
+    [optional] dim (int): dimensionality of structure. Default=2.
+    [optional] for_scan_hse (bool): to generate special KPOINTS for SCAN/HSE?. Default=False.
+       
+    """
+
     dir_sub = os.getcwd()
     
     poscar = Poscar.from_file(os.path.join(dir_sub,"POSCAR"),
@@ -149,12 +192,12 @@ def main(args):
     structure = poscar.structure
 
     ## use pymatgen symmetry functions to determine the high-symmetry k-path
-    kpts_line = Kpoints.automatic_linemode(args.ndiv, HighSymmKpath(structure))
+    kpts_line = Kpoints.automatic_linemode(int(ndiv), HighSymmKpath(structure))
     ## if 2D structure specified, remove k-points with non-zero z-component
-    if args.dim == 2:
+    if int(dim) == 2:
         kpts_line = remove_z_kpoints(kpts_line)  
     
-    if not args.for_scan_hse:
+    if not for_scan_hse:
         ## write out regular KPOINT file for bandstructure calc. with PBE
         kpts_line.write_file(os.path.join(dir_sub,"KPOINTS_bands"))
         
@@ -162,7 +205,7 @@ def main(args):
         ## get regular grid kpoints from IBZKPT file
         ibz_lines, n_ibz_kpts = get_ibzkpts()
         ## get explicit kpoints between each high-symmetry point
-        abs_path = get_kpts_line_explicit(kpts_line, args.ndiv)
+        abs_path = get_kpts_line_explicit(kpts_line, int(ndiv))
         ## write out special KPOINT file for bandstructure calc. with SCAN/HSE
         with open(os.path.join(dir_sub,"KPOINTS_bands_SCAN"),'w') as f:
             f.write('Special KPOINTS file\n')
@@ -172,19 +215,5 @@ def main(args):
                 f.write(line)
             for point in abs_path:
                 f.write('{}\n'.format(' '.join(point)))
-
-
-if __name__ == '__main__':
-
-    """
-    Writes a KPOINTS file for band structure calculations. Does
-    not use the typical linemode syntax for NSCF calculations,
-    but uses the IBZKPT + high-symmetry path syntax described in
-    http://cms.mpi.univie.ac.at/wiki/index.php/Si_bandstructure
-    so that SCF calculations can be performed.
-    
-    """
-    
-    main(sys.argv[1:]) 
 
             

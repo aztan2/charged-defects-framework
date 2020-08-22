@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-import myutils
+from qdef2d import myutils
 
 
 def main(args):

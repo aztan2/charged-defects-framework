@@ -1,9 +1,15 @@
 import os
-import argparse
 import numpy as np
 from pymatgen.io.vasp.inputs import Poscar
 from pymatgen import Structure
 from pymatgen.core.operations import SymmOp
+
+
+## A lot of the functions in here have been copied and only 
+## slightly modified from functions in the MPInterfaces package.
+## It should be possible to merge and replace those functions
+## and import from MPInterfaces instead of keeping separate versions.
+## I'll leave that as a task for someone else though...
 
 
 def get_rotation_matrix(axis, theta):
@@ -36,7 +42,7 @@ def get_rotation_matrix(axis, theta):
     return np.array([[aa+bb-cc-dd, 2*(bc+ad), 2*(bd-ac)],
                      [2*(bc-ad), aa+cc-bb-dd, 2*(cd+ab)],
                      [2*(bd+ac), 2*(cd-ab), aa+dd-bb-cc]])
-					 
+ 
 
 def align_axis(structure, axis='c', direction=(0, 0, 1)):
     
@@ -194,50 +200,44 @@ def layer_from_bulk(struct_bulk,slabmin,slabmax):
     return struct_layer
 
     
-def main(args):
+def gen_unitcell_2d(path_poscar,vacuum,zaxis='c',from_bulk=False,slabmin=None,slabmax=None):
+        
+    """ 
+    Generate 2D unitcell.
     
-    ## define a main function callable from another python script
-    
-    parser = argparse.ArgumentParser(description='Generate 2D unitcell.')
-    parser.add_argument('path_poscar',help='path to unitcell POSCAR')
-    parser.add_argument('vacuum',type=int,help='vacuum spacing')
-    parser.add_argument('--zaxis',help='axis perpendicular to layer (a/b/c)',default='c')
-    parser.add_argument('--from_bulk',help='extract layer from bulk?',
-                        default=False,action='store_true')
-    parser.add_argument('--slabmin',type=float,
-                        help='fractional coord of the bottom of the layer to isolate')
-    parser.add_argument('--slabmax',type=float,
-                        help='fractional coord of the top of the layer to isolate')
-      
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
-
+    Parameters
+    ----------
+    path_poscar (str): path to unitcell POSCAR
+    vacuum (int): vacuum spacing in Angstroms
+    [optional] zaxis (str): axis perpendicular to layer: a/b/c(default)
+    [optional] from_bulk (bool): extract layer from bulk? Default=False.
+    [optional] slabmin (float): fractional coord of the bottom of the layer to isolate
+    [optional] slabmax (float): fractional coord of the top of the layer to isolate
+       
+    """
 
     ## get current working directory
     ## subdirectories for different vacuum spacings will be created here
-    dir_main = os.getcwd()
+    dir_main = os.getcwd()   
     
+    poscar = Poscar.from_file(path_poscar, check_for_POTCAR=False) 
     
-    poscar = Poscar.from_file(args.path_poscar, check_for_POTCAR=False) 
-    
-    struct = align_axis(poscar.structure,axis=args.zaxis)
-    if args.from_bulk:
-        if args.slabmin == None or args.slabmax == None:
+    struct = align_axis(poscar.structure,axis=zaxis)
+    if from_bulk:
+        if slabmin == None or slabmax == None:
             raise ValueError('missing slabmin and/or slabmax argument')
         else:
-            struct = layer_from_bulk(struct,args.slabmin,args.slabmax)       
+            if slabmin > slabmax:
+                raise ValueError('incorrect slabmin and/or slabmax argument')
+            else:
+                struct = layer_from_bulk(struct,slabmin,slabmax)       
     slab_d = get_slab_thickness(struct)
-    struct = add_vacuum(struct, args.vacuum - (struct.lattice.c - slab_d))
+    struct = add_vacuum(struct, vacuum - (struct.lattice.c - slab_d))
     struct = center_slab(struct)
 
 
-    dir_sub = os.path.join(dir_main,"vac_%d"%args.vacuum)
+    dir_sub = os.path.join(dir_main,"vac_%d"%vacuum)
     if not os.path.exists(dir_sub):
         os.makedirs(dir_sub)
     Poscar.write_file(Poscar(struct),os.path.join(dir_sub,"POSCAR"))
-
-    
-if __name__ == '__main__':
-    
-    main(sys.argv[1:])
     

@@ -1,7 +1,5 @@
-import sys
 import os
 import json
-import argparse
 
 
 def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):
@@ -60,27 +58,26 @@ def load_modules(s,vasp="noz"):
     return s
 
 
-def main(args):
+def gen_submit(jobname='jobby',queue='hennig',nodes=1,mem=2048,time='24:00:00',
+               vasp='noz_intel2019',email='annemarietan@ufl.edu'):
     
-    ## define a main function callable from another python script
+    """ 
+    Generate submission script for hipergator.
     
-    parser = argparse.ArgumentParser(description='Generate submit script')
-    parser.add_argument('--jobname',help='jobname',default='jobby')
-    parser.add_argument('--queue',help='queue',default='hennig')
-    parser.add_argument('--nodes',type=int,help='number of nodes',default=1)
-    parser.add_argument('--mem',type=int,help='memory per node',default=2048)
-    parser.add_argument('--time',help='time requested (d-hh:mm:ss)',default='2-00:00:00')
-    parser.add_argument('--vasp',help='vasp executable (noz/ncl_noz/std)',default='noz_intel2019')
-    parser.add_argument('--email',help='user email',default='annemarietan@ufl.edu')
-      
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
+    Parameters
+    ----------
+    [optional] jobname (str): job name. Default='jobby'.
+    [optional] queue (str): queue. Default='hennig'.
+    [optional] nodes (int): number of nodes requested. Default=1.
+    [optional] mem (int): requested memory per node. Default=2048(MB). 
+    [optional] time (str): time requested (d-hh:mm:ss). Default='24:00:00'.
+    [optional] vasp (str): type of vasp executable to use, e.g. noz/ncl_noz/std. Default='noz_intel2019'.
+    [optional] email (str): user email. Default='annemarietan@ufl.edu'. PLEASE CHANGE ACCORDINGLY!!
+       
+    """
     
-    
-    ## the bash script already put us in the appropriate subdirectory
     dir_sub = os.getcwd()
-    
-    
+        
     if os.path.exists(os.path.join(dir_sub,"defectproperty.json")):
         with open(os.path.join(dir_sub,"defectproperty.json"), 'r') as file:
             defprop = json.loads(file.read())
@@ -89,21 +86,16 @@ def main(args):
                     +"_"+"x".join([str(m) for m in defprop["supercell"]])
                     +"_"+str(defprop["vacuum"]))
     else:
-        jobname = args.jobname
+        jobname = jobname
     print (jobname)
     
     s = '#!/bin/bash\n'
-    s = sbatch_cmds(s,jobname,args.nodes,args.mem,args.time,args.queue,args.email)
+    s = sbatch_cmds(s,jobname,int(nodes),int(mem),time,queue,email)
     s += 'cd $SLURM_SUBMIT_DIR\n\n'
-    s = load_modules(s,args.vasp)
+    s = load_modules(s,vasp)
     s += 'echo \'Done.\''
     
     with open(os.path.join(dir_sub,"submitVASP.sh"),'w') as f:
-        f.write(s)
+        f.write(s) 
 
-
-if __name__ == '__main__':
- 
-    main(sys.argv[1:])  
-            
-            
+        

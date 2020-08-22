@@ -2,7 +2,8 @@ import os
 import sys
 import json
 import argparse
-import myutils, gen_SPHInX_input_file, get_alignment_correction_2d
+from qdef2d import myutils
+from qdef2d.analysis import gen_SPHInX_input_file, get_alignment_correction_2d
 
 
 def main(args):
