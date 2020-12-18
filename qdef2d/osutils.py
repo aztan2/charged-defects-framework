@@ -1,4 +1,5 @@
 import os
+import errno
 
 
 def listdironly(path):
@@ -21,10 +22,8 @@ def check_file_exists(directory,filename):
     files = [f for f in os.listdir(directory) 
                 if f.startswith(filename)]
     if len(files) < 1:
-        print ("can't find %s file!"%filename)
         return False
     elif len(files) > 1:
-        print ("more than 1 %s file found"%filename)
         return False
     else:
         return True
