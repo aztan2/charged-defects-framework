@@ -228,8 +228,8 @@ class IncarSettings:
                   "LCHARG": lcharg,   ## write CHGCAR
                   "LMAXMIX": lmaxmix,  ##  controls up to which l-quantum number are written to CHGCAR
                   "LORBIT": lorbit,  ## write PROCAR (projected wavefunctions)
-                  "LVTOT": lvtot,   ## write LOCPOT
-                  "LVHAR": lvhar
+#                  "LVTOT": lvtot,   ## write LOCPOT
+                  "LVHAR": lvhar   ## write LOCPOT
                   }
         
         self.params.update(params)
