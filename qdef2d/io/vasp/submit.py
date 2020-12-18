@@ -2,7 +2,7 @@ import os
 import json
 
 
-def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):
+def sbatch_cmds(s,jobname,qos,nodes,cpus,mem,time,email=None):
     
     s += '#SBATCH --job-name=%s\n'%jobname
     s += '#SBATCH -o out_%j\n'
@@ -12,9 +12,9 @@ def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):
         s += '#SBATCH --mail-user=%s\n'%email
     s += '#SBATCH --partition=hpg2-compute\n'
     s += '#SBATCH --qos=%s\n'%qos
-    s += '#SBATCH --ntasks=%d\n'%(nodes*32)
-    s += '#SBATCH --ntasks-per-socket=16\n'
-    s += '#SBATCH --ntasks-per-node=32\n'
+    s += '#SBATCH --ntasks=%d\n'%cpus
+#    s += '#SBATCH --ntasks-per-socket=16\n'
+#    s += '#SBATCH --ntasks-per-node=32\n'
     s += '#SBATCH --nodes=%d\n'%nodes
     s += '#SBATCH --cpus-per-task=1\n'
     s += '#SBATCH --mem-per-cpu=%dmb\n'%(mem)
@@ -24,7 +24,7 @@ def sbatch_cmds(s,jobname,nodes,mem,time,qos,email=None):
     return s
 
 
-def load_modules(s,vasp="noz"):      
+def load_modules(s,vasp="noz_intel2019"):      
 
     s += 'module purge\n'
     if vasp == "noz_intel2019":
@@ -58,7 +58,7 @@ def load_modules(s,vasp="noz"):
     return s
 
 
-def gen_submit(jobname='jobby',queue='hennig',nodes=1,mem=2048,time='24:00:00',
+def gen_submit(jobname='jobby',queue='hennig',nodes=1,cpus=None,mem=2048,time='24:00:00',
                vasp='noz_intel2019',email='annemarietan@ufl.edu'):
     
     """ 
@@ -69,6 +69,7 @@ def gen_submit(jobname='jobby',queue='hennig',nodes=1,mem=2048,time='24:00:00',
     [optional] jobname (str): job name. Default='jobby'.
     [optional] queue (str): queue. Default='hennig'.
     [optional] nodes (int): number of nodes requested. Default=1.
+    [optional] cpus (int): number of cpus requested. Default=nodes*32.
     [optional] mem (int): requested memory per node. Default=2048(MB). 
     [optional] time (str): time requested (d-hh:mm:ss). Default='24:00:00'.
     [optional] vasp (str): type of vasp executable to use, e.g. noz/ncl_noz/std. Default='noz_intel2019'.
@@ -89,8 +90,10 @@ def gen_submit(jobname='jobby',queue='hennig',nodes=1,mem=2048,time='24:00:00',
         jobname = jobname
     print (jobname)
     
+    if cpus == None: cpus = nodes*32
+    
     s = '#!/bin/bash\n'
-    s = sbatch_cmds(s,jobname,int(nodes),int(mem),time,queue,email)
+    s = sbatch_cmds(s,jobname,queue,int(nodes),int(cpus),int(mem),time,email)
     s += 'cd $SLURM_SUBMIT_DIR\n\n'
     s = load_modules(s,vasp)
     s += 'echo \'Done.\''
