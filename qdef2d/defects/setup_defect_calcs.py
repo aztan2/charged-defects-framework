@@ -90,17 +90,18 @@ def setup(dir_def_main,qs,cells,vacs,functional='PBE',kppa=400,bulkref=False):
                                                   q,cell,vac)
                 
                 ## generate INCAR
-                incar.gen_incar(q=q,functional=functional)
+                incar.generate(q=q,functional=functional)
                 
                 ## generate KPOINTS
-                kpoints.gen_kpts_uniform(kppa=kppa)
+                kpoints.generate_uniform(kppa=kppa)
                 
                 ## generate submission script 
                 ## with the default settings nodes=1, cpus=32, mem=2048, time=24:00:00
+                ## PLEASE CHANGE EMAIL SETTINGS!!!
                 if bulkref:
-                    submit.gen_submit(jobname='ref_%s_%d'%(cell_str,vac))
+                    submit.generate(jobname='ref_%s_%d'%(cell_str,vac),email='annemarietan@ufl.edu')
                 else:
-                    submit.gen_submit()
+                    submit.generate(email='annemarietan@ufl.edu')
       
           
     os.chdir(dir_def_main)
