@@ -153,7 +153,7 @@ def automatic_density_2d(structure, kppa, force_gamma=False):
     return Kpoints(comment, 0, style, [num_div], [0, 0, 0])
 
 
-def gen_kpts_uniform(kppa=400):
+def generate_uniform(kppa=400):
     
     """ 
     Generate uniform mesh KPOINTS.
@@ -172,7 +172,7 @@ def gen_kpts_uniform(kppa=400):
     Kpoints.write_file(kpts, os.path.join(dir_sub,"KPOINTS"))
     
 
-def gen_kpts_line(ndiv=20,dim=2,for_scan_hse=False):
+def generate_line(ndiv=20,dim=2,for_scan_hse=False):
    
     """ 
     Generate linemode KPOINTS.

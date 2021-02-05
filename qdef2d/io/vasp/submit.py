@@ -58,8 +58,8 @@ def load_modules(s,vasp="noz_intel2019"):
     return s
 
 
-def gen_submit(jobname='jobby',queue='hennig',nodes=1,cpus=None,mem=2048,time='24:00:00',
-               vasp='noz_intel2019',email='annemarietan@ufl.edu'):
+def generate(jobname='jobby',queue='hennig',nodes=1,cpus=None,mem=2048,time='24:00:00',
+             vasp='noz_intel2019',email=None):
     
     """ 
     Generate submission script for hipergator.
@@ -73,8 +73,8 @@ def gen_submit(jobname='jobby',queue='hennig',nodes=1,cpus=None,mem=2048,time='2
     [optional] mem (int): requested memory per node. Default=2048(MB). 
     [optional] time (str): time requested (d-hh:mm:ss). Default='24:00:00'.
     [optional] vasp (str): type of vasp executable to use, e.g. noz/ncl_noz/std. Default='noz_intel2019'.
-    [optional] email (str): user email. Default='annemarietan@ufl.edu'. PLEASE CHANGE ACCORDINGLY!!
-       
+    [optional] email (str): user email  
+     
     """
     
     dir_sub = os.getcwd()

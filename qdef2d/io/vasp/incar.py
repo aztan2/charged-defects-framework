@@ -94,7 +94,7 @@ class IncarSettings:
         return
     
         
-    def elrelax(self,nelm=120,ediff=1e-6):
+    def elrelax(self,nelm=120,ediff=1e-5):
         
         params = {"NELM": nelm, ## max number of electronic steps per SC loop
                   "EDIFF": ediff  ## accuracy for electronic minimization
@@ -210,11 +210,12 @@ class IncarSettings:
         return
         
         
-    def parallel(self,lplane=True,npar=4,kpar=2):
+    def parallel(self,lplane=True,ncore=8):
         
         params = {"LPLANE": True,  ## parallelize over planewaves
-                  "NPAR": npar,  ## number of bands treated in parallel (~sqrt #nodes)
-                  "KPAR": kpar   ## number of k-points treated in parallel 
+                  "NCORE": ncore ## number of cores that work on an individual orbital
+#                  "NPAR": npar,  ## number of bands treated in parallel (~sqrt #nodes)
+#                  "KPAR": kpar   ## number of k-points treated in parallel 
                   }
         
         self.params.update(params)
@@ -246,7 +247,7 @@ class IncarSettings:
         return
     
     
-def gen_incar(q=0,runtype='relax',functional='PBE',soc=False,relaxcell=False):
+def generate(q=0,runtype='relax',functional='PBE',soc=False,relaxcell=False):
 
     """ 
     Generate INCAR file.
