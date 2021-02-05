@@ -19,8 +19,8 @@ class Defect():
     def parse_initdef(self, initdef):
         
         """
-        Checks if the initdef json file contains the required fields 
-        and correct entry types.
+        Checks if the initdef object (read in from json file)
+        contains the required fields and correct entry types.
         
         """
         
@@ -250,5 +250,33 @@ class Defect():
              }
                     
         return d
+    
+    
+    
+    
+    def generate_supercell(self,initdef):
 
+        """ 
+        Generate defect supercell according to defect details in initdef object
+  
+        """
+    
+        ## for each defect listed in the json file
+        for d in initdef:
+            ## parse details from initdef, 
+            ## checking for required fields and correct entry types
+            initdef_d = self.parse_initdef(initdef[d])
+#            print (initdef_d)
+            ## determine the defect site (PeriodicSite object)
+            defect_site = self.get_defect_site(initdef_d)
+            ## set the defect info (type, species, site) 
+            self.add_defect_info(initdef_d,defect_site)  
+    
+        ## create vacancy defect(s)           
+        self.remove_atom()
+        ## create substitutional defect(s)
+        self.replace_atom()
+        ## create interstitial defect(s)
+        self.add_atom()     
+ 
     

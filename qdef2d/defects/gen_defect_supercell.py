@@ -2,10 +2,6 @@ import os
 import errno
 import json
 import argparse
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    import pymatgen
 from pymatgen.io.vasp.inputs import Poscar
 from qdef2d.defects.core import Defect
 
@@ -41,7 +37,6 @@ def generate(dir_def_main, initdef_file, q, supercell, vacuum, bulkref=False):
     
     ## make undefected supercell
     structure = poscar.structure.copy()
-#    nvecs = [int(n) for n in supercell.split('x')]
     structure.make_supercell(supercell)
     structure_bulk = structure.copy()
     
@@ -52,33 +47,18 @@ def generate(dir_def_main, initdef_file, q, supercell, vacuum, bulkref=False):
                           os.path.join(subdir_def,"POSCAR"))
         
     else:
-        ## initialize defect object
-        defect = Defect(structure_bulk,structure.copy(),supercell,vacuum,q)
-        
         ## read in defect details from initdefect json file
         id_file = os.path.join(dir_def_main,initdef_file)
         if not os.path.exists(id_file):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), id_file)
         with open(id_file, 'r') as file:
             initdef = json.loads(file.read())
-    
-        ## for each defect listed in the json file
-        for d in initdef:
-            ## parse details from initdef, 
-            ## checking for required fields and correct entry types
-            initdef_d = defect.parse_initdef(initdef[d])
-#            print (initdef_d)
-            ## determine the defect site (PeriodicSite object)
-            defect_site = defect.get_defect_site(initdef_d)
-            ## set the defect info (type, species, site) 
-            defect.add_defect_info(initdef_d,defect_site)  
-    
-        ## create vacancy defect(s)           
-        defect.remove_atom()
-        ## create substitutional defect(s)
-        defect.replace_atom()
-        ## create interstitial defect(s)
-        defect.add_atom()     
+            
+        ## initialize defect object
+        defect = Defect(structure_bulk,structure.copy(),supercell,vacuum,q)
+        
+        ## generate defect supercell
+        defect.generate_supercell(initdef)   
     
         ## write defect POSCAR
         Poscar.write_file(Poscar(defect.structure.get_sorted_structure()),
