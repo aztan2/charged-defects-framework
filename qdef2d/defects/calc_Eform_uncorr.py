@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 import pandas as pd
-from qdef2d import myutils
+from qdef2d import osutils, logging
 
     
 def get_i_ni(defect):
@@ -26,45 +26,42 @@ def get_i_ni(defect):
     return (species, ni)
 
 
-def main(args):
+def calc(main_system,dir_db,dir_def,xlfile,mu_limit,functional="GGA",soc=False,logfile=None):
     
-    ## define a main function callable from another python script
-        
-    parser = argparse.ArgumentParser(description='Evaluate uncorrected defect formation energy.')
-    parser.add_argument('main_system',help='the main system e.g. MoS2, WSe2')
-    parser.add_argument('dir_db',help='path to the database directory')
-    parser.add_argument('dir_def',help='path to the defect directory containing the \
-                                        excel, initdefect.json files')
-    parser.add_argument('xlfile',help='excel filename to read/save the dataframe to')
-    parser.add_argument('mu_limit',help='which chemical potential limit to consider, \
-                                         e.g. Mo-rich')
-    parser.add_argument('--functional',help='functional that was used for this set \
-                                             of calculations', default='GGA')
-    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory',
-                        default=False,action='store_true')
-    parser.add_argument('--logfile',help='logfile to save output to')
-       
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
+    """ 
+    Evaluate uncorrected defect formation energy.
+    
+    Parameters
+    ----------
+    main_system (str): the main system e.g. MoS2, WSe2
+    dir_db (str): path to the database directory
+    dir_def (str): path to the defect directory containing the excel, initdefect.json files
+    xlfile (str): excel filename to read/save the dataframe from/to
+    mu_limit (str): which chemical potential limit to consider, e.g. Mo-rich
+    [optional] functionl (str): functional used for this set of calculations. Default=GGA.
+    [optional] soc (bool): whether or not to look in soc(dos) subdirectory. Default=False.
+    [optional] logfile (str): logfile to save output to
+    
+    """
     
     ## set up logging
-    if args.logfile:
-        myLogger = myutils.setup_logging(args.logfile)
+    if logfile:
+        myLogger = logging.setup_logging(logfile)
     else:
-        myLogger = myutils.setup_logging()
+        myLogger = logging.setup_logging()
 
 
     ## load list of dataframes from sheets from excel file    
-    df = pd.read_excel(os.path.join(args.dir_def,args.xlfile),sheet_name=None)
+    df = pd.read_excel(os.path.join(dir_def,xlfile),sheet_name=None)
     
  
     ## find initdef.json file
-    if myutils.check_file_exists(args.dir_def,"initdef") == True:
-        for file in os.listdir(args.dir_def): 
+    if osutils.check_file_exists(dir_def,"initdef") == True:
+        for file in os.listdir(dir_def): 
             if file.startswith("initdef"):
                 file_initdef = file
         ##  get species i and ni from initdefect.json file           
-        with open(os.path.join(args.dir_def,file_initdef), 'r') as file:
+        with open(os.path.join(dir_def,file_initdef), 'r') as file:
             initdef = json.loads(file.read())
             species_list, ni_list = [],[]
             for defect in initdef:
@@ -80,21 +77,21 @@ def main(args):
         ## get the relevant chemical potentials
         found_mu = True
         for species in species_list:
-            mu = "mu_%s_%s"%(species,args.mu_limit)
+            mu = "mu_%s_%s"%(species,mu_limit)
             
             ## check if the relevant database entry exists
-            if myutils.check_file_exists(args.dir_db,"%s.json"%species) == True:
+            if osutils.check_file_exists(dir_db,"%s.json"%species) == True:
                 dbentry_file = "%s.json"%species
-                with open(os.path.join(args.dir_db, dbentry_file), 'r') as file:
+                with open(os.path.join(dir_db, dbentry_file), 'r') as file:
                     mater = json.loads(file.read())
                 ## search for appropriate mu entry
                 mu_key = "mu"
-                for key in mater[args.functional].keys():
-                    if key.startswith("mu_%s"%args.mu_limit):
+                for key in mater[functional].keys():
+                    if key.startswith("mu_%s"%mu_limit):
                         mu_key = key
                 myLogger.info("Using chemical potential " + mu_key + " from " + dbentry_file)                    
                 ## input the corresponding mus into the dataframe
-                df[q][mu] = mater[args.functional][mu_key]
+                df[q][mu] = mater[functional][mu_key]
                 
             else:
                 myLogger.info("Cannot find the database entry for " + species)
@@ -103,16 +100,16 @@ def main(args):
     
         ## get the VBMs
         ## check if the relevant database entry exists
-        if myutils.check_file_exists(args.dir_db,"%s.json"%args.main_system) == True:
-            dbentry_file = "%s.json"%(args.main_system)
-            with open(os.path.join(args.dir_db, dbentry_file), 'r') as file:
+        if osutils.check_file_exists(dir_db,"%s.json"%main_system) == True:
+            dbentry_file = "%s.json"%(main_system)
+            with open(os.path.join(dir_db, dbentry_file), 'r') as file:
                 mater = json.loads(file.read())   
                 
             ## input the VBMs corresponding to each vacuum spacing into the dataframe
             for rowind in df[q].index.values:
                 vac = df[q].loc[rowind].vacuum
-                if vac in mater[args.functional].keys():
-                    df[q].at[rowind,'VBM'] = mater[args.functional][vac]["VBM"]
+                if vac in mater[functional].keys():
+                    df[q].at[rowind,'VBM'] = mater[functional][vac]["VBM"]
                 else:
                     myLogger.info("Cannot find the VBM entry for " + vac) 
                   
@@ -122,7 +119,7 @@ def main(args):
                 ## proceed if chemical potentials and VBMs have been correctly entered
                 sum_mu = 0
                 for n,species in zip(ni_list,species_list):
-                    mu = "mu_%s_%s"%(species,args.mu_limit)
+                    mu = "mu_%s_%s"%(species,mu_limit)
                     sum_mu += n * df[q][mu]
                 if q == 'charge_0': 
                     colname = "E_form_corr"
@@ -134,19 +131,38 @@ def main(args):
                                  + int(q.split("_")[-1]) * df[q].loc[:,'VBM']                                  
          
         else:
-            myLogger.info("Cannot find the database entry for " + args.main_system)
+            myLogger.info("Cannot find the database entry for " + main_system)
 
 
     ## write the updated excel file
-    writer = pd.ExcelWriter(myutils.joinpath(args.dir_def,args.xlfile))
+    writer = pd.ExcelWriter(os.path.join(dir_def,xlfile))
     for q in df.keys():  
         df[q].to_excel(writer, q, index=False)
     writer.save() 
     
     
 if __name__ == '__main__':
-
     
-    main(sys.argv[1:])
+    
+    ## this script can also be run directly from the command line
+    parser = argparse.ArgumentParser(description='Evaluate uncorrected defect formation energy.')
+    parser.add_argument('main_system',help='the main system e.g. MoS2, WSe2')
+    parser.add_argument('dir_db',help='path to the database directory')
+    parser.add_argument('dir_def',help='path to the defect directory containing the \
+                                        excel, initdefect.json files')
+    parser.add_argument('xlfile',help='excel filename to read/save the dataframe to')
+    parser.add_argument('mu_limit',help='which chemical potential limit to consider, \
+                                         e.g. Mo-rich')
+    parser.add_argument('--functional',help='functional used for this set of calculations', 
+                        default='GGA')
+    parser.add_argument('--soc',help='whether or not to look in soc(dos) subdirectory',
+                        default=False,action='store_true')
+    parser.add_argument('--logfile',help='logfile to save output to')
+       
+    ## read in the above arguments from command line
+    args = parser.parse_args()
+    
+    calc(args.main_system, args.dir_db, args.dir_def, args.xlfile, args.mu_limit,
+         args.functional, args.soc, args.logfile)
     
     

@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import argparse
 import numpy as np
@@ -9,7 +8,7 @@ from pymatgen.io.vasp.outputs import Outcar, Vasprun
 from qdef2d import osutils, logging
 
 
-def main(path_def,path_ref,xlfile,soc=False,logfile=None):
+def parse(path_def,path_ref,xlfile,soc=False,logfile=None):
 
     
     """ 
@@ -108,7 +107,7 @@ def main(path_def,path_ref,xlfile,soc=False,logfile=None):
             for vac in osutils.listdironly(os.path.join(path_def,q,cell)):   
                 myLogger.info("parsing %s %s %s"%(q,cell,vac))
 
-                subdir_ref = myutils.joinpath(args.path,q,cell,vac,'')
+                subdir_def = os.path.join(path_def,q,cell,vac)
 
                 if soc:
                     dir_soc = [dirname for dirname in osutils.listdironly(subdir_def) if "soc" in dirname]
@@ -157,7 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--logfile',help='logfile to save output to')
 
     ## read in the above arguments from command line
-    args = parser.parse_args(args)
+    args = parser.parse_args()
     
-    main(args.path_def, args.path_ref, args.xlfile, args.soc, args.logfile) 
+    parse(args.path_def, args.path_ref, args.xlfile, args.soc, args.logfile) 
              
