@@ -276,12 +276,12 @@ def generate(q=0,runtype='relax',functional='PBE',soc=False,relaxcell=False):
         inc.soc()
     if relaxcell:
         inc.ionicrelax(isif=3)
-        inc.parallel(npar=None,kpar=None)
+        inc.parallel(ncore=1)
         inc.output(lcharg=True)
     if runtype == 'dielectric':
         inc.dielectric()
         inc.startup(isym=None)
-        inc.parallel(npar=None,kpar=None)
+        inc.parallel(ncore=None)
         inc.output(lvtot=None,lvhar=None)
     inc.stripNone()      
     
