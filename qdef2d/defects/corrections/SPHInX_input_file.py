@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import numpy as np
 import argparse
@@ -59,18 +58,15 @@ def isolated_grp(slabmin,slabmax):
     return s
 
     
-def main(args):
+def generate(eps,slab_d):
     
-    ## define a main function callable from another python script
+    """
+    Generate SPHInX input file.
     
-    parser = argparse.ArgumentParser(description='Generate SPHInX input file')
-    parser.add_argument('eps',type=float,help='averaged dielectric constant')
-    parser.add_argument('slab_d',type=float,help='corresponding slab thickness (Angstroms)')
-
-      
-    ## read in the above arguments from command line
-    args = parser.parse_args(args)
+    eps (float): averaged dielectric constant
+    slab_d (float): corresponding slab thickness (Angstroms)
     
+    """
 
     ## the main script should have put us in the appropriate subdirectory
     dir_sub = os.getcwd()
@@ -84,9 +80,9 @@ def main(args):
     
     ## SLAB GROUP
     ## assume slab is centered in the cell vertically
-    slabmin = (lattice.c-args.slab_d)/2
-    slabmax = (lattice.c+args.slab_d)/2
-    s += slab_grp(slabmin,slabmax,eps=args.eps*np.eye(3))
+    slabmin = (lattice.c-slab_d)/2
+    slabmax = (lattice.c+slab_d)/2
+    s += slab_grp(slabmin,slabmax,eps=eps*np.eye(3))
     
     ## CHARGE GROUP
     posZ = np.mean([def_site[2] for def_site in defprop["defect_site"]])
@@ -103,6 +99,14 @@ def main(args):
         
 if __name__ == '__main__':
     
-    main(sys.argv[1:]) 
-                                            
-                    
+
+    ## this script can also be run directly from the command line
+    parser = argparse.ArgumentParser(description='Generate SPHInX input file')
+    parser.add_argument('eps',type=float,help='averaged dielectric constant')
+    parser.add_argument('slab_d',type=float,help='corresponding slab thickness (Angstroms)')
+     
+    ## read in the above arguments from command line
+    args = parser.parse_args()
+    
+    generate(args.eps, args.slab_d)
+    
