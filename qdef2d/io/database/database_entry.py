@@ -4,7 +4,7 @@ import sys
 import json
 import argparse
 from pymatgen.io.vasp.outputs import Poscar, Vasprun
-import myutils
+from qdef2d import osutils, logging
 
 
 class DatabaseEntry(object):
@@ -58,13 +58,13 @@ class DatabaseEntry(object):
                 mater[func] = {}
         
             dir_func = os.path.join(self.dir_dft,func.split('+')[0])
-            if "mag" in myutils.listdironly(dir_func):
+            if "mag" in osutils.listdironly(dir_func):
                 dir_func =  os.path.join(dir_func,"mag")
                 
             if self.monolayer:
                 ## for a monolayer system, enter every vacuum subdirectory
                 ## and extract total energy, Band gap, VBM
-                for vac in myutils.listdironly(dir_func):
+                for vac in osutils.listdironly(dir_func):
                     
                     if vac[0:3] == "vac":
                         dir_vac = os.path.join(dir_func,vac)
@@ -94,7 +94,7 @@ class DatabaseEntry(object):
                                 mater[func].update({"mu": vr.final_energy/formula_units})
                                 mater[func].update({"Egap": gap})
 
-                if "vac_20" not in myutils.listdironly(dir_func):
+                if "vac_20" not in osutils.listdironly(dir_func):
                     self.log.info("can't find the vac_20 subdirectory :( \
                                    I don't know what converged energy to use...")
                                     
@@ -234,9 +234,9 @@ def main(args):
     
     ## set up logging
     if args.logfile:
-        myLogger = myutils.setup_logging(args.logfile)
+        myLogger = logging.setup_logging(args.logfile)
     else:
-        myLogger = myutils.setup_logging()
+        myLogger = logging.setup_logging()
      
         
     if args.method == "from_vasp":
