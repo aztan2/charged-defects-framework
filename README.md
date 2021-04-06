@@ -12,14 +12,41 @@
 
 ```
 qdef2d
-|-- defects
-|   |--
 |-- io
-|   |--
+|   |-- vasp
+|   |   |-- incar.py
+|   |   |-- kpoints.py
+|   |   |-- submit.py
+|   |   |-- parse_energies.py
+|   |-- database
+|       |-- database_entry.py
+|-- defects
+|   |-- core.py
+|   |-- gen_defect_supercell.py
+|   |-- setup_defect_calcs.py
+|   |-- calc_Eform_uncorr.py
+|   |-- calc_Eform_corr.py
+|   |-- corrections
+|       |-- SPHInX_input_file.py
+|       |-- alignment_correction_2d.py
+|       |-- apply_corrections_2d.py
+|       |-- parse_corrections.py
 |-- logging.py
 |-- osutils.py
 |-- slabutils.py
 ```
+
+* `incar.py`, `kpoints.py`, `submit.py`: functions for generating VASP input files, job submission script
+* `parse_energies.py`: function/script to parse total energies from VASP OUTCARs and save into a pandas dataframe.
+* `database_entry.py`: functionalities related to creating, manipulating, and reading simple database entries [should be replaced with interface to actual mongodb database, e.g. on MaterialsWeb]
+* `core.py`: defines Defect object, includes functionalities for creating different types of defects
+* `gen_defect_supercell.py`, `setup_defect_calcs.py`: functions/scripts to generate defect supercell, VASP input files for defect supercell calculations
+* `calc_Eform_uncorr.py`, `calc_Eform_corr.py`: functions/scripts to evaluate the un-corrected and corrected defect formation energies and save into a pandas dataframe.
+* `SPHInX_input_file.py`, `alignment_correction_2d.py`, `apply_corrections_2d.py`, `parse_corrections.py`: functions/scripts to generate the input file for the charge correction, apply the charge correction, and parse the results into a pandas dataframe.
+* `logging.py`, `osutils.py`, `slabutils.py`: additional utility functions
+
+Additional documentation can be found in the source codes, accessed via the `help()` function, or with the `--h` flag from the command line.
+
 
 ## Jupyter tutorials:
 
@@ -48,5 +75,3 @@ BibTex entry for this Github repository::
      doi          = {}
    }
 ```
-
-
